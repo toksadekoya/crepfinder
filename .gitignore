@@ -34,3 +34,4 @@ Thumbs.db
 
 # Local tool settings
 .claude/settings.local.json
+**/.claude/settings.local.json
