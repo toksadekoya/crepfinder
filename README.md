@@ -1,45 +1,61 @@
-# CrepFinder Research Prototype
+# CrepFinder
 
-CrepFinder is a controlled A/B study prototype for a final-year dissertation on trust signals in peer-to-peer sneaker marketplaces. The app is intentionally scoped as a research instrument rather than a commercial marketplace: participants see one assigned condition, evaluate a seller, complete a trust questionnaire, and receive a debrief with a participant code.
+CrepFinder is a final year dissertation prototype for testing trust signals in a peer-to-peer sneaker marketplace. It is not intended to be a production marketplace. The main study flow is: consent, random A/B condition assignment, browse listings, request purchase, complete the trust questionnaire, then view the debrief and participant code.
 
-## Study Flow
+## Tech Stack
 
-1. Consent screen creates a participant code in `P###` format.
-2. The backend assigns Condition A or Condition B and stores the assignment.
-3. The participant browses identical listings under their assigned condition.
-4. The participant selects a listing and requests purchase.
-5. The trust questionnaire is submitted against the participant code.
-6. The app shows a debrief explaining the simulated trust cues and displays a copyable participant code.
+- Frontend: React, Vite, Tailwind CSS
+- Backend: Node.js, Express
+- Database: PostgreSQL
+- Auth: Passport.js with Google OAuth 2.0, plus the original password login route
 
-## Conditions
+## A/B Conditions
 
-Condition A presents social verification cues: Google OAuth account anchoring where configured, challenge-code verification status, account age, new-account flags, mutual connections, transaction-locked review count, seller status, recent buyers, and controlled community verification metadata.
+- Condition A: social trust cues, including Google OAuth account anchoring where configured, challenge-code social verification, account age, new-account flags, mutual connections and locked review counts.
+- Condition B: traditional marketplace cues, including star ratings, review counts, rating distribution and recent written reviews.
 
-Condition B presents traditional marketplace rating cues: star rating, transaction-locked review count, rating distribution, and recent written reviews.
-
-All listing imagery, product information, layout, prices, sellers, spacing, and visual treatment are held constant except for the trust signal layer.
+The product listings, images, prices and layout are kept the same across both conditions. Only the seller trust layer changes.
 
 ## Local Setup
 
-Frontend:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Backend:
+Install dependencies:
 
 ```bash
 cd backend
 npm install
+
+cd ../frontend
+npm install
+```
+
+Create the database schema and seed data:
+
+```bash
+cd backend
 npm run db:init
 npm run seed
+```
+
+Run the backend:
+
+```bash
+cd backend
 npm run dev
 ```
 
-The frontend runs on `http://localhost:5173` and proxies `/api` to the backend on `http://localhost:3001` during local development.
+Run the frontend:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Local URLs:
+
+```text
+Backend:  http://localhost:3001
+Frontend: http://localhost:5173
+```
 
 ## Environment Variables
 
@@ -50,7 +66,7 @@ DATABASE_URL=postgres://...
 SESSION_SECRET=<32+ char random string>
 NODE_ENV=production
 BACKEND_PUBLIC_URL=https://your-backend-url
-FRONTEND_ORIGIN=https://your-frontend.vercel.app
+FRONTEND_ORIGIN=https://your-frontend-url
 RESEARCH_EXPORT_TOKEN=<private export token>
 SOCIAL_VERIFICATION_ADMIN_TOKEN=<private moderation token>
 GOOGLE_CLIENT_ID=<Google OAuth client id>
@@ -58,7 +74,7 @@ GOOGLE_CLIENT_SECRET=<Google OAuth client secret>
 GOOGLE_OAUTH_REDIRECT_URI=https://your-backend-url/api/auth/google/callback
 ```
 
-The backend also supports separate Postgres variables if `DATABASE_URL` is not used:
+The backend also supports separate database variables:
 
 ```text
 DB_HOST=
@@ -72,56 +88,59 @@ Frontend:
 
 ```text
 VITE_API_BASE_URL=https://your-backend-url
-VITE_ETHICS_REFERENCE=<ethics reference once confirmed>
+VITE_ETHICS_REFERENCE=<ethics reference>
 ```
 
-`VITE_API_URL` is also accepted as an alias for `VITE_API_BASE_URL`.
+`VITE_API_URL` also works as an alias for `VITE_API_BASE_URL`.
 
-## Optional Google OAuth
+## OAuth
 
-Google OAuth is implemented with Passport.js as an optional sign-in layer, not as a replacement for the participant consent flow. If `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are absent, the research prototype remains usable and the Google button is hidden in production.
+Google OAuth is optional. If the Google client ID and secret are not set, the study still runs without OAuth.
 
-Backend routes:
-
-```text
-GET /api/auth/status
-GET /api/auth/google
-GET /api/auth/google/callback
-GET /api/auth/me
-POST /api/auth/logout
-```
-
-For local development, add this redirect URI to the Google Cloud OAuth client if the frontend talks directly to the backend:
+Local redirect URI:
 
 ```text
 http://localhost:3001/api/auth/google/callback
 ```
 
-For production, add the deployed backend callback URL:
+OAuth data stored in `users`:
 
-```text
-https://your-backend-url/api/auth/google/callback
-```
+- Google subject ID
+- email
+- email verification status
+- display name
+- avatar URL
+- auth provider
+- last login timestamp
 
-OAuth stores Google account metadata on the local `users` table: Google subject ID, email, email verification status, display name, avatar URL, provider, and last login timestamp. It does not turn the seller verification badge into identity proof; the social verification workflow remains the challenge-code moderation flow described below.
+OAuth is used for account anchoring only. It does not prove seller identity or guarantee seller trustworthiness.
 
-## Marketplace Prototype Features
+## Prototype Features
 
-The prototype includes basic product listings, brand and keyword search, listing detail pages, a non-real-time messaging workflow, and transaction-locked review enforcement. Reviews can only be submitted through the backend after a completed prototype purchase request exists for the participant and listing. This provides the dissertation feature boundary for "locked reviews" without implementing real payment processing.
+- Product listings
+- Brand filters and keyword search
+- Listing detail page
+- Basic non-real-time messaging
+- Google OAuth sign-in when configured
+- Challenge-code social verification
+- Transaction-locked review eligibility
+- Random A/B condition assignment
+- McKnight trust questionnaire
+- Participant code generation in `P###` format
+- Debrief screen
+- CSV research export
 
 ## Research Export
-
-The researcher CSV export is available at:
 
 ```text
 /api/research/export.csv?token=<RESEARCH_EXPORT_TOKEN>
 ```
 
-The export includes participant codes, condition assignments, consent timestamps, listing metadata, trust measurement IDs, and all seven questionnaire responses.
+The export includes participant codes, condition assignments, consent timestamps, listing metadata and trust questionnaire responses.
 
-## Social Verification Workflow
+## Social Verification
 
-CrepFinder includes a moderated challenge-code verification flow for sellers:
+Routes:
 
 ```text
 POST /api/social-verification/start
@@ -132,40 +151,31 @@ POST /api/social-verification/<verification id>/approve
 POST /api/social-verification/<verification id>/reject
 ```
 
-The start route generates a unique `CREPFINDER-XXXXXX` challenge code. The seller then submits evidence that the code appears on or alongside their linked social profile. The public seller endpoint only exposes platform, profile URL/username, status, and verification date; it does not expose challenge codes, evidence text, admin notes, or private user data.
+The seller receives a `CREPFINDER-XXXXXX` challenge code and submits evidence that the code appears on or alongside their social profile. Public buyer views only show safe fields: platform, username/profile URL, status and verified date.
 
-In production, approval and rejection require `SOCIAL_VERIFICATION_ADMIN_TOKEN` via the `x-admin-token` header or `?token=` query parameter.
+This feature should be described as moderated social profile verification. It should not be described as fraud prevention, identity proof or product authentication.
 
-## Deployment Plan
+## Development Notes
 
-1. Create a Neon Postgres project and copy the connection string.
-2. Deploy the backend to Railway or another Node host.
-3. Set backend environment variables, including `DATABASE_URL`, `SESSION_SECRET`, `NODE_ENV`, `BACKEND_PUBLIC_URL`, `FRONTEND_ORIGIN`, `RESEARCH_EXPORT_TOKEN`, `SOCIAL_VERIFICATION_ADMIN_TOKEN`, and OAuth variables if using Google sign-in.
-4. Run `npm run db:init` and `npm run seed` against the Neon database.
-5. Deploy the frontend to Vercel.
-6. Set `VITE_API_BASE_URL` to the deployed backend URL.
-7. Update `FRONTEND_ORIGIN` on the backend to the deployed frontend URL and redeploy the backend.
-8. Add the deployed backend OAuth callback URL to the Google Cloud Console if OAuth is enabled.
-9. Smoke test the full study journey end-to-end.
+The project used a hybrid development approach. Planning was sequential because the dissertation had fixed research, ethics and evaluation requirements. The prototype was then built iteratively using a Kanban-style backlog.
 
-## Notes For Methodology
-
-The prototype uses a bounded challenge-code workflow for social profile verification, while other marketplace trust cues such as mutual connections and review summaries remain controlled study materials. This is intentional: OAuth proves account ownership, not marketplace seller trustworthiness, and uncontrolled live marketplace data would weaken the A/B comparison. Controlled cues allow the study to isolate how different trust signal designs affect perceived trust while keeping all non-trust listing variables constant.
-
-## Development Methodology Evidence
-
-The project used a hybrid development approach. Early planning followed a broadly sequential structure to define the research aim, ethics constraints, experimental design, and required study flow. Implementation then proceeded iteratively using Kanban-style task tracking, with work broken into small cards and prioritised by research risk.
-
-Project-management evidence is recorded in:
+Supporting notes are in:
 
 ```text
 docs/project-management/hybrid-development-methodology.md
 docs/project-management/kanban-board.md
 docs/project-management/iteration-log.md
+docs/ethics/oauth-data-use.md
+docs/architecture.md
 ```
 
-These documents map completed implementation tasks to actual source files and validation checks, so the methodology chapter can truthfully describe the software artefact as iteratively developed after the sequential planning stage.
+## Deployment Outline
 
-## Social Verification Boundary
-
-CrepFinder also includes a bounded challenge-code workflow for moderated social profile verification. Sellers can link a social profile, receive a unique `CREPFINDER-XXXXXX` challenge code, submit evidence that the code appears on or alongside that profile, and wait for a moderator decision. Buyer-facing UI only claims that the seller completed CrepFinder's social verification challenge. It does not claim identity proof, fraud prevention, or product authenticity.
+1. Create a production PostgreSQL database.
+2. Deploy the backend and set the backend environment variables.
+3. Run `npm run db:init` and `npm run seed` against the production database.
+4. Deploy the frontend.
+5. Set `VITE_API_BASE_URL` to the deployed backend URL.
+6. Set `FRONTEND_ORIGIN` on the backend to the deployed frontend URL.
+7. Add the deployed OAuth callback URL in Google Cloud Console if OAuth is being used.
+8. Test the full flow: consent, browse, listing detail, purchase request, trust questionnaire and debrief.
