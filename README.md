@@ -13,9 +13,9 @@ CrepFinder is a controlled A/B study prototype for a final-year dissertation on 
 
 ## Conditions
 
-Condition A presents social verification cues: challenge-code verification status, mutual connections, review count, seller status, recent buyers, and controlled community verification metadata.
+Condition A presents social verification cues: Google OAuth account anchoring where configured, challenge-code verification status, account age, new-account flags, mutual connections, transaction-locked review count, seller status, recent buyers, and controlled community verification metadata.
 
-Condition B presents traditional marketplace rating cues: star rating, review count, rating distribution, and recent written reviews.
+Condition B presents traditional marketplace rating cues: star rating, transaction-locked review count, rating distribution, and recent written reviews.
 
 All listing imagery, product information, layout, prices, sellers, spacing, and visual treatment are held constant except for the trust signal layer.
 
@@ -79,7 +79,7 @@ VITE_ETHICS_REFERENCE=<ethics reference once confirmed>
 
 ## Optional Google OAuth
 
-Google OAuth is implemented as an optional sign-in layer, not as a replacement for the participant consent flow. If `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are absent, the research prototype remains usable and the Google button is hidden in production.
+Google OAuth is implemented with Passport.js as an optional sign-in layer, not as a replacement for the participant consent flow. If `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are absent, the research prototype remains usable and the Google button is hidden in production.
 
 Backend routes:
 
@@ -103,7 +103,11 @@ For production, add the deployed backend callback URL:
 https://your-backend-url/api/auth/google/callback
 ```
 
-OAuth stores Google account metadata on the local `users` table: Google subject ID, email, display name, avatar URL, provider, and last login timestamp. It does not turn the seller verification badge into identity proof; the social verification workflow remains the challenge-code moderation flow described below.
+OAuth stores Google account metadata on the local `users` table: Google subject ID, email, email verification status, display name, avatar URL, provider, and last login timestamp. It does not turn the seller verification badge into identity proof; the social verification workflow remains the challenge-code moderation flow described below.
+
+## Marketplace Prototype Features
+
+The prototype includes basic product listings, brand and keyword search, listing detail pages, a non-real-time messaging workflow, and transaction-locked review enforcement. Reviews can only be submitted through the backend after a completed prototype purchase request exists for the participant and listing. This provides the dissertation feature boundary for "locked reviews" without implementing real payment processing.
 
 ## Research Export
 
