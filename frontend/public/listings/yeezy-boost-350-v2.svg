@@ -1,0 +1,19 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="128" y1="104" x2="1080" y2="1096" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EEF1E8"/>
+      <stop offset="1" stop-color="#D6D8C8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#bg)"/>
+  <circle cx="956" cy="252" r="164" fill="#F9FAF7" fill-opacity="0.72"/>
+  <circle cx="256" cy="930" r="210" fill="#B7B39E" fill-opacity="0.22"/>
+  <rect x="88" y="88" width="1024" height="1024" rx="46" stroke="#0C0A09" stroke-opacity="0.08" stroke-width="4"/>
+  <path d="M234 726C322 638 440 589 564 589H766C833 589 895 611 944 652L996 696L946 746C899 793 836 819 770 819H525C448 819 375 789 321 734L234 646V726Z" fill="#F9FAF7"/>
+  <path d="M320 699C379 651 453 624 530 624H790C841 624 889 642 925 673L963 705L920 740C879 773 828 792 775 792H526C470 792 417 773 376 738L320 699Z" fill="#B8B39B"/>
+  <path d="M390 675C515 656 640 633 767 607L753 652C646 681 540 704 432 722L390 675Z" fill="#0C0A09" fill-opacity="0.72"/>
+  <text x="90" y="160" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="30" font-weight="500" letter-spacing="8">ADIDAS</text>
+  <text x="90" y="246" fill="#0C0A09" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="94" font-weight="500" letter-spacing="-4">Yeezy Boost</text>
+  <text x="90" y="334" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="52" font-weight="500" letter-spacing="-1">350 V2</text>
+  <text x="90" y="1032" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="34" font-weight="500" letter-spacing="6">RESEARCH SAMPLE</text>
+</svg>

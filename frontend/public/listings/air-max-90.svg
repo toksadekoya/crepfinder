@@ -1,0 +1,18 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="84" x2="1080" y2="1116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6EFE6"/>
+      <stop offset="1" stop-color="#E7D9CA"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#bg)"/>
+  <circle cx="962" cy="232" r="164" fill="#FDFBF7" fill-opacity="0.78"/>
+  <circle cx="260" cy="970" r="236" fill="#D1BBA3" fill-opacity="0.26"/>
+  <rect x="86" y="88" width="1028" height="1028" rx="46" stroke="#0C0A09" stroke-opacity="0.08" stroke-width="4"/>
+  <path d="M252 694C330 610 441 567 556 567H794C856 567 914 590 955 631L1002 678L944 734C895 782 828 809 758 809H524C452 809 384 783 333 734L252 656V694Z" fill="#FDFBF7"/>
+  <path d="M337 683C386 636 452 609 521 609H798C844 609 887 626 918 656L954 690L911 729C873 763 824 782 772 782H525C473 782 424 762 387 727L337 683Z" fill="#D4CDC5"/>
+  <path d="M503 642C561 642 608 595 608 537H697C697 644 610 731 503 731H350V642H503Z" fill="#E67C4E"/>
+  <text x="90" y="160" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="30" font-weight="500" letter-spacing="8">NIKE</text>
+  <text x="90" y="252" fill="#0C0A09" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="110" font-weight="500" letter-spacing="-4">Air Max 90</text>
+  <text x="90" y="1032" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="34" font-weight="500" letter-spacing="6">ARCHIVE PAIR</text>
+</svg>
