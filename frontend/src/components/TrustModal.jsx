@@ -70,21 +70,34 @@ export default function TrustModal({ listing, condition, participant, onComplete
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-[16px] border border-border-subtle bg-surface shadow-card">
+      <div
+        className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-[16px] border border-border-subtle bg-surface shadow-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="trust-modal-title"
+        aria-describedby={stage === STAGES.SURVEY ? 'trust-modal-description' : undefined}
+      >
 
         <div className="shrink-0 border-b border-border-subtle px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-[18px] font-medium text-primary">
+              <h2 id="trust-modal-title" className="text-[18px] font-medium text-primary">
                 Before You Buy
               </h2>
               {stage === STAGES.SURVEY && (
-                <p className="mt-1 text-[12px] text-secondary">
+                <p id="trust-modal-description" className="mt-1 text-[12px] text-secondary">
                   Help us understand your trust in this seller. This takes about one minute.
                 </p>
               )}
             </div>
-            <button onClick={onClose} className="text-[20px] leading-none text-muted transition-colors hover:text-primary">✕</button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close trust questionnaire"
+              className="text-[20px] leading-none text-muted transition-colors hover:text-primary"
+            >
+              ✕
+            </button>
           </div>
         </div>
 
@@ -110,8 +123,8 @@ export default function TrustModal({ listing, condition, participant, onComplete
                         {q.subscale}
                       </p>
                     )}
-                    <div className="space-y-3">
-                      <p className="text-[14px] font-medium leading-[1.55] text-primary">{q.text}</p>
+                    <fieldset className="space-y-3">
+                      <legend className="text-[14px] font-medium leading-[1.55] text-primary">{q.text}</legend>
                       <div className="flex items-end justify-between gap-1">
                         {[1, 2, 3, 4, 5, 6, 7].map(val => (
                           <label key={val} className="flex flex-col items-center gap-1 cursor-pointer flex-1">
@@ -121,6 +134,7 @@ export default function TrustModal({ listing, condition, participant, onComplete
                               value={val}
                               checked={responses[q.key] === val}
                               onChange={() => setResponses(r => ({ ...r, [q.key]: val }))}
+                              aria-label={`${q.text} ${val} out of 7`}
                               className="sr-only"
                             />
                             <div
@@ -138,12 +152,12 @@ export default function TrustModal({ listing, condition, participant, onComplete
                           </label>
                         ))}
                       </div>
-                    </div>
+                    </fieldset>
                   </div>
                 );
               })}
 
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
             </div>
           )}
 
@@ -160,6 +174,7 @@ export default function TrustModal({ listing, condition, participant, onComplete
         <div className="shrink-0 border-t border-border-subtle px-6 py-4">
           {stage === STAGES.SURVEY && (
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={!allAnswered}
               className={`w-full rounded-full py-3 text-sm font-medium transition-all ${

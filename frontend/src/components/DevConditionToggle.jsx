@@ -8,7 +8,7 @@ export default function DevConditionToggle({ condition, setCondition }) {
       <span className="pl-1 text-[10px] font-medium uppercase tracking-[0.12em] text-tertiary">
         Dev
       </span>
-      <div className="flex items-center rounded-full border border-border-subtle bg-page p-1">
+      <div className="flex items-center rounded-full border border-border-subtle bg-page p-1" role="group" aria-label="Development condition switcher">
         {['A', 'B'].map((value) => {
           const active = value === condition;
 
@@ -18,6 +18,7 @@ export default function DevConditionToggle({ condition, setCondition }) {
               type="button"
               onClick={() => setCondition(value)}
               aria-pressed={active}
+              aria-label={`Show condition ${value}`}
               className={`h-7 w-7 rounded-full text-[11px] font-medium transition-colors ${
                 active
                   ? 'bg-primary text-surface'

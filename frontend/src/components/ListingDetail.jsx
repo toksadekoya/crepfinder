@@ -20,11 +20,12 @@ import {
 function StarRating({ value }) {
   const rating = Number(value) || 0;
   const stars = Math.round(rating);
+  const label = rating ? `${formatRating(rating)} out of 5 stars` : 'No star rating available';
 
   return (
-    <span className="flex gap-0.5">
+    <span className="flex gap-0.5" role="img" aria-label={label}>
       {[1, 2, 3, 4, 5].map(i => (
-        <span key={i} className={i <= stars ? 'text-amber-400' : 'text-stone-300'}>★</span>
+        <span key={i} aria-hidden="true" className={i <= stars ? 'text-amber-400' : 'text-stone-300'}>★</span>
       ))}
     </span>
   );
@@ -74,11 +75,12 @@ function MessageComposer({ listing, participant }) {
         onChange={(event) => setMessage(event.target.value)}
         rows={3}
         maxLength={500}
+        aria-label={`Message @${listing.seller_username}`}
         placeholder={`Ask @${listing.seller_username} a question about this pair`}
         className="mt-3 w-full resize-none rounded-[10px] border border-border-subtle bg-page px-3 py-2 text-[13px] leading-[1.55] text-primary outline-none transition-colors placeholder:text-muted focus:border-border-strong"
       />
       <div className="mt-3 flex items-center justify-between gap-3">
-        <p className="text-[11px] text-muted">{status || 'Prototype messaging is stored as a non-real-time thread.'}</p>
+        <p role="status" className="text-[11px] text-muted">{status || 'Prototype messaging is stored as a non-real-time thread.'}</p>
         <button
           type="button"
           onClick={handleSend}
@@ -168,6 +170,7 @@ function SocialSellerPanel({ listing, onBuy }) {
       )}
 
       <button
+        type="button"
         onClick={onBuy}
         className="w-full rounded-full bg-primary py-3 text-[14px] font-medium text-surface transition-colors hover:bg-secondary"
       >
@@ -211,7 +214,15 @@ function RatingsSellerPanel({ listing, reviews, onBuy }) {
                 <span className="w-3 text-right">{star}</span>
                 <span className="text-amber-400">★</span>
                 <div className="flex-1 rounded-full bg-stone-200 h-1.5">
-                  <div className="h-1.5 rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                  <div
+                    className="h-1.5 rounded-full bg-primary"
+                    style={{ width: `${pct}%` }}
+                    role="progressbar"
+                    aria-label={`${star} star reviews`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={pct}
+                  />
                 </div>
                 <span className="w-6 text-right">{count}</span>
               </div>
@@ -242,6 +253,7 @@ function RatingsSellerPanel({ listing, reviews, onBuy }) {
       )}
 
       <button
+        type="button"
         onClick={onBuy}
         className="w-full rounded-full bg-primary py-3 text-[14px] font-medium text-surface transition-colors hover:bg-secondary"
       >
@@ -290,6 +302,7 @@ export default function ListingDetail({ condition, participant, onStudyComplete 
   return (
     <div className="space-y-6">
       <button
+        type="button"
         onClick={() => navigate(-1)}
         className="inline-flex text-[13px] font-medium text-secondary transition-colors hover:text-primary"
       >

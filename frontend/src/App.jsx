@@ -32,6 +32,7 @@ export default function App() {
   const [authStatus, setAuthStatus] = useState({
     authenticated: false,
     googleOAuthEnabled: false,
+    linkedinOAuthEnabled: false,
     user: null,
   });
   const condition = studySession?.condition ?? 'A';
@@ -45,7 +46,12 @@ export default function App() {
       })
       .catch(() => {
         if (active) {
-          setAuthStatus({ authenticated: false, googleOAuthEnabled: false, user: null });
+          setAuthStatus({
+            authenticated: false,
+            googleOAuthEnabled: false,
+            linkedinOAuthEnabled: false,
+            user: null,
+          });
         }
       });
 
@@ -88,8 +94,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-page text-primary">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
       <Navbar authStatus={authStatus} onAuthUpdate={setAuthStatus} />
-      <main className="mx-auto w-full max-w-[1180px] px-6 py-6 md:py-8">
+      <main id="main-content" className="mx-auto w-full max-w-[1180px] px-6 py-6 md:py-8" tabIndex={-1}>
         <Routes>
           <Route path="/auth/callback" element={<AuthCallback onAuthUpdate={setAuthStatus} />} />
           <Route

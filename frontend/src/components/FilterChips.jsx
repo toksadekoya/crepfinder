@@ -1,6 +1,6 @@
 export default function FilterChips({ options, value, onChange }) {
   return (
-    <div className="-mx-1 overflow-x-auto px-1">
+    <div className="-mx-1 overflow-x-auto px-1" role="group" aria-label="Filter listings by brand">
       <div className="flex min-w-max items-center gap-2">
         {options.map((option) => {
           const active = option === value;
@@ -10,6 +10,7 @@ export default function FilterChips({ options, value, onChange }) {
               key={option}
               type="button"
               onClick={() => onChange(option)}
+              aria-pressed={active}
               className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors ${
                 active
                   ? 'border-border-strong bg-surface text-primary'

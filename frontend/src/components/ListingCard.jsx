@@ -74,6 +74,7 @@ export default function ListingCard({ listing, condition }) {
   return (
     <Link
       to={`/listing/${id}`}
+      aria-label={`View ${brand} ${model}, ${formatPrice(price)}, ${formatUkSize(size)}, sold by @${seller_username}`}
       className="group flex flex-col overflow-hidden rounded-[10px] border border-border-subtle bg-surface transition-shadow hover:shadow-card"
     >
       <div className="relative aspect-square overflow-hidden border-b border-border-subtle bg-subtle">

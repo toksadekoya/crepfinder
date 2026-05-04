@@ -38,7 +38,7 @@ export default function ListingsPage({ condition }) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-3" aria-label="Loading listings">
         {[1, 2, 3, 4, 5, 6].map((item) => (
           <div key={item} className="overflow-hidden rounded-[10px] border border-border-subtle bg-surface">
             <div className="aspect-square animate-pulse bg-subtle" />
@@ -65,6 +65,7 @@ export default function ListingsPage({ condition }) {
         <label className="block">
           <span className="sr-only">Search listings</span>
           <input
+            type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search by brand, model, condition or seller"

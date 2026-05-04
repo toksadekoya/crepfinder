@@ -219,8 +219,8 @@ export default function SellerVerificationPage() {
             </p>
           )}
 
-          {message && <p className="text-[13px] text-secondary">{message}</p>}
-          {error && <p className="text-[13px] text-red-600">{error}</p>}
+          {message && <p role="status" className="text-[13px] text-secondary">{message}</p>}
+          {error && <p role="alert" className="text-[13px] text-red-600">{error}</p>}
         </section>
       </div>
 
