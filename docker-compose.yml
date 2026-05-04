@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: crepfinder-postgres
+    environment:
+      POSTGRES_DB: crepfinder
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - crepfinder-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crepfinder"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: crepfinder-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: crepfinder
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_SSL: "false"
+      SESSION_SECRET: local-docker-session-secret-change-me
+      FRONTEND_ORIGIN: http://localhost:5173
+      BACKEND_PUBLIC_URL: http://localhost:3001
+      RESEARCH_EXPORT_TOKEN: local-export-token
+      SOCIAL_VERIFICATION_ADMIN_TOKEN: local-admin-token
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: crepfinder-frontend
+    depends_on:
+      - backend
+    environment:
+      VITE_API_BASE_URL: http://localhost:3001
+      VITE_ETHICS_REFERENCE: Ethics ref. pending confirmation
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
+volumes:
+  crepfinder-postgres:
