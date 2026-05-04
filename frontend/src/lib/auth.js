@@ -14,8 +14,16 @@ export function getInitials(user) {
   return name.slice(0, 2).toUpperCase();
 }
 
+export function beginOAuth(provider) {
+  window.location.href = `${apiBaseUrl}/api/auth/${provider}`;
+}
+
 export function beginGoogleOAuth() {
-  window.location.href = `${apiBaseUrl}/api/auth/google`;
+  beginOAuth('google');
+}
+
+export function beginLinkedInOAuth() {
+  beginOAuth('linkedin');
 }
 
 export async function fetchAuthStatus() {

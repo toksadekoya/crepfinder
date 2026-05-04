@@ -7,11 +7,11 @@ CrepFinder is a final year dissertation prototype for testing trust signals in a
 - Frontend: React, Vite, Tailwind CSS
 - Backend: Node.js, Express
 - Database: PostgreSQL
-- Auth: Passport.js with Google OAuth 2.0, plus the original password login route
+- Auth: Passport.js with Google and LinkedIn OAuth 2.0, plus the original password login route
 
 ## A/B Conditions
 
-- Condition A: social trust cues, including Google OAuth account anchoring where configured, challenge-code social verification, account age, new-account flags, mutual connections and locked review counts.
+- Condition A: social trust cues, including Google/LinkedIn OAuth account anchoring where configured, challenge-code social verification, account age, new-account flags, mutual connections and locked review counts.
 - Condition B: traditional marketplace cues, including star ratings, review counts, rating distribution and recent written reviews.
 
 The product listings, images, prices and layout are kept the same across both conditions. Only the seller trust layer changes.
@@ -72,6 +72,9 @@ SOCIAL_VERIFICATION_ADMIN_TOKEN=<private moderation token>
 GOOGLE_CLIENT_ID=<Google OAuth client id>
 GOOGLE_CLIENT_SECRET=<Google OAuth client secret>
 GOOGLE_OAUTH_REDIRECT_URI=https://your-backend-url/api/auth/google/callback
+LINKEDIN_CLIENT_ID=<LinkedIn OAuth client id>
+LINKEDIN_CLIENT_SECRET=<LinkedIn OAuth client secret>
+LINKEDIN_OAUTH_REDIRECT_URI=https://your-backend-url/api/auth/linkedin/callback
 ```
 
 The backend also supports separate database variables:
@@ -95,17 +98,18 @@ VITE_ETHICS_REFERENCE=<ethics reference>
 
 ## OAuth
 
-Google OAuth is optional. If the Google client ID and secret are not set, the study still runs without OAuth.
+Google and LinkedIn OAuth are optional. If provider client IDs and secrets are not set, the study still runs without OAuth. LinkedIn sign-in uses the current OpenID Connect flow with `openid profile email` scopes.
 
-Local redirect URI:
+Local redirect URIs:
 
 ```text
 http://localhost:3001/api/auth/google/callback
+http://localhost:3001/api/auth/linkedin/callback
 ```
 
 OAuth data stored in `users`:
 
-- Google subject ID
+- Google or LinkedIn subject ID
 - email
 - email verification status
 - display name
@@ -115,13 +119,54 @@ OAuth data stored in `users`:
 
 OAuth is used for account anchoring only. It does not prove seller identity or guarantee seller trustworthiness.
 
+## Tests
+
+Backend:
+
+```bash
+cd backend
+npm test
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm test
+```
+
+The current tests cover API route contracts, OAuth provider status, consent rendering, a basic automated accessibility check and key listing presentation helpers.
+
+## Docker
+
+Local Docker setup is provided for the frontend, backend and PostgreSQL database:
+
+```bash
+docker compose up --build
+```
+
+In another terminal, initialise and seed the database once the containers are running:
+
+```bash
+docker compose exec backend npm run db:init
+docker compose exec backend npm run seed
+```
+
+Docker URLs:
+
+```text
+Backend:  http://localhost:3001
+Frontend: http://localhost:5173
+Postgres: localhost:5432
+```
+
 ## Prototype Features
 
 - Product listings
 - Brand filters and keyword search
 - Listing detail page
 - Basic non-real-time messaging
-- Google OAuth sign-in when configured
+- Google and LinkedIn OAuth sign-in when configured
 - Challenge-code social verification
 - Transaction-locked review eligibility
 - Random A/B condition assignment
@@ -166,6 +211,7 @@ docs/project-management/hybrid-development-methodology.md
 docs/project-management/kanban-board.md
 docs/project-management/iteration-log.md
 docs/ethics/oauth-data-use.md
+docs/accessibility/wcag-2-1-aa-audit.md
 docs/architecture.md
 ```
 
@@ -177,5 +223,5 @@ docs/architecture.md
 4. Deploy the frontend.
 5. Set `VITE_API_BASE_URL` to the deployed backend URL.
 6. Set `FRONTEND_ORIGIN` on the backend to the deployed frontend URL.
-7. Add the deployed OAuth callback URL in Google Cloud Console if OAuth is being used.
+7. Add the deployed OAuth callback URLs in Google Cloud Console and the LinkedIn Developer Portal if OAuth is being used.
 8. Test the full flow: consent, browse, listing detail, purchase request, trust questionnaire and debrief.

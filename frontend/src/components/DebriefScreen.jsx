@@ -49,8 +49,8 @@ export default function DebriefScreen({ session }) {
         <p>
           Some marketplace signals are simulated research data. In particular, social verification cues such as
           mutual connections, community buyers, review counts, and seller status labels are controlled stimuli rather
-          than live third-party identity checks. OAuth sign-in, where configured, verifies control of a Google account
-          only; it does not prove marketplace trustworthiness. This keeps the listings identical across conditions
+          than live third-party identity checks. OAuth sign-in, where configured, verifies control of a Google or
+          LinkedIn account only; it does not prove marketplace trustworthiness. This keeps the listings identical across conditions
           except for the trust signal being studied.
         </p>
         <p>

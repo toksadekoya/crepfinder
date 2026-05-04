@@ -3,10 +3,13 @@
 ```mermaid
 flowchart LR
   P["Participant browser"] --> C["Consent screen"]
-  P --> OAuthStart["Optional Google sign-in"]
+  P --> OAuthStart["Optional OAuth sign-in"]
   OAuthStart --> Google["Google OAuth 2.0"]
+  OAuthStart --> LinkedIn["LinkedIn OpenID Connect"]
   Google --> OAuthCallback["GET /api/auth/google/callback"]
+  LinkedIn --> LinkedInCallback["GET /api/auth/linkedin/callback"]
   OAuthCallback --> U[("users table")]
+  LinkedInCallback --> U
   C --> S["POST /api/study/consent"]
   S --> PG[("Neon Postgres")]
   S --> A["Condition assignment A/B"]
@@ -46,6 +49,7 @@ flowchart LR
   subgraph Backend["Node / Express API"]
     S
     OAuthCallback
+    LinkedInCallback
     A
     Q
     PR
@@ -66,7 +70,7 @@ The backend stores participant codes, condition assignments, consent timestamps,
 
 ## OAuth Scope
 
-Google OAuth is implemented as an optional sign-in layer. It stores account metadata on the `users` table and demonstrates a real third-party authentication integration, but it does not replace the consent screen and does not prove marketplace trustworthiness. Participant responses remain tied to the generated `P###` participant code.
+Google OAuth and LinkedIn OpenID Connect are implemented as optional sign-in layers. They store account metadata on the `users` table and demonstrate real third-party authentication integrations, but they do not replace the consent screen and do not prove marketplace trustworthiness. Participant responses remain tied to the generated `P###` participant code.
 
 ## Development Methodology Trace
 

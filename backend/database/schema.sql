@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(100) UNIQUE NOT NULL,
   password_hash VARCHAR(255),
   google_id VARCHAR(255),
+  linkedin_id VARCHAR(255),
   display_name VARCHAR(100),
   avatar_url TEXT,
   oauth_email_verified BOOLEAN DEFAULT FALSE,
@@ -20,6 +21,7 @@ ALTER TABLE users
 
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS google_id VARCHAR(255),
+  ADD COLUMN IF NOT EXISTS linkedin_id VARCHAR(255),
   ADD COLUMN IF NOT EXISTS display_name VARCHAR(100),
   ADD COLUMN IF NOT EXISTS avatar_url TEXT,
   ADD COLUMN IF NOT EXISTS oauth_email_verified BOOLEAN DEFAULT FALSE,
@@ -29,6 +31,10 @@ ALTER TABLE users
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id
   ON users(google_id)
   WHERE google_id IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_linkedin_id
+  ON users(linkedin_id)
+  WHERE linkedin_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS listings (
   id SERIAL PRIMARY KEY,

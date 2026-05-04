@@ -177,6 +177,10 @@ export function getSellerOAuthLabel(listing) {
     return 'Google account linked';
   }
 
+  if (listing?.seller_auth_provider === 'linkedin') {
+    return 'LinkedIn OAuth anchored';
+  }
+
   return 'Password account';
 }
 
