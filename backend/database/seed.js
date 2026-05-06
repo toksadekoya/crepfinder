@@ -40,7 +40,7 @@ const seed = async () => {
         ($2, 'New Balance', '990v5', 10.5, 'Fair', 75.00, 'Well worn but still solid', '/listings/new-balance-990v5.svg'),
         ($3, 'Nike', 'Dunk Low Retro', 9.0, 'Like New', 140.00, 'Worn twice only', '/listings/dunk-low-retro.svg')
       RETURNING id`,
-      [userIds[0], userIds[1]]
+      [userIds[0], userIds[1], userIds[2]]
     );
     const listingIds = listingsResult.rows.map((r) => r.id);
 
