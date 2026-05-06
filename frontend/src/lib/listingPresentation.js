@@ -29,22 +29,6 @@ const fallbackSocialData = {
   communityRank: 'Trusted',
 };
 
-const badgeThresholds = {
-  topSeller: {
-    minimumCompletedPurchases: 3,
-    minimumReviews: 3,
-    minimumAverageRating: 4,
-  },
-  communityTrusted: {
-    minimumMutualConnections: 2,
-  },
-};
-
-function toNumber(value) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
-}
-
 export function formatPrice(value) {
   const amount = Number(value) || 0;
   return priceFormatter.format(amount);
@@ -91,7 +75,7 @@ export function getListingReviewCount(listing) {
 }
 
 export function getListingAverageRating(listing) {
-  const rating = toNumber(listing?.seller_avg_rating);
+  const rating = Number(listing?.seller_avg_rating);
 
   if (Number.isFinite(rating) && rating > 0) {
     return rating;
@@ -106,41 +90,6 @@ export function getListingAverageRating(listing) {
   return reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
 }
 
-export function getListingSellerBadges(listing) {
-  if (Array.isArray(listing?.seller_badges)) {
-    return listing.seller_badges.filter(Boolean);
-  }
-
-  const averageRating = toNumber(listing?.seller_avg_rating);
-  const reviewCount = toNumber(listing?.seller_review_count);
-  const completedPurchases = toNumber(listing?.seller_completed_purchase_count);
-  const fastShippingReviews = toNumber(listing?.seller_fast_shipping_review_count);
-  const mutualConnections = toNumber(listing?.seller_mutual_connection_count);
-  const socialStatus = listing?.seller_social_verification?.status;
-  const badges = [];
-
-  if (
-    completedPurchases >= badgeThresholds.topSeller.minimumCompletedPurchases &&
-    reviewCount >= badgeThresholds.topSeller.minimumReviews &&
-    averageRating >= badgeThresholds.topSeller.minimumAverageRating
-  ) {
-    badges.push('Top Seller');
-  }
-
-  if (
-    socialStatus === 'verified' &&
-    mutualConnections >= badgeThresholds.communityTrusted.minimumMutualConnections
-  ) {
-    badges.push('Community Trusted');
-  }
-
-  if (completedPurchases > 0 && fastShippingReviews > 0) {
-    badges.push('Fast Shipper');
-  }
-
-  return badges;
-}
-
 export function getListingSocialData(listing) {
   const fallback = mockSocialData[Number(listing?.seller_id)] ?? fallbackSocialData;
   const backendConnections = Array.isArray(listing?.seller_mutual_connections)
@@ -149,10 +98,7 @@ export function getListingSocialData(listing) {
   const backendCount = Number(listing?.seller_mutual_connection_count);
 
   if (!backendConnections && !Number.isFinite(backendCount)) {
-    return {
-      ...fallback,
-      badges: getListingSellerBadges(listing),
-    };
+    return fallback;
   }
 
   const mutualConnectionRecords = backendConnections ?? [];
@@ -165,7 +111,6 @@ export function getListingSocialData(listing) {
     mutualConnections: Number.isFinite(backendCount) ? backendCount : mutualConnectionRecords.length,
     mutualConnectionRecords,
     recentBuyers: recentBuyers.length ? recentBuyers : fallback.recentBuyers,
-    badges: getListingSellerBadges(listing),
   };
 }
 
