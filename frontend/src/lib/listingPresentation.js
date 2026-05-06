@@ -91,7 +91,7 @@ export function getListingAverageRating(listing) {
 }
 
 export function getListingSocialData(listing) {
-  const fallback = mockSocialData[Number(listing?.seller_id)] ?? fallbackSocialData;
+  const fallback = mockSocialData[listing?.seller_username] ?? mockSocialData[Number(listing?.seller_id)] ?? fallbackSocialData;
   const backendConnections = Array.isArray(listing?.seller_mutual_connections)
     ? listing.seller_mutual_connections
     : null;

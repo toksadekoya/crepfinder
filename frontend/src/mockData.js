@@ -159,30 +159,40 @@ export const mockReviews = {
   5: [],
 };
 
-// Seller trust signal mock data
+const sneakerheadSocialStimulus = {
+  verifiedBy: 12,
+  mutualConnections: 3,
+  recentBuyers: ['Jordan23', 'KickzKing', 'SoleSeeker'],
+  badges: ['Top Seller', 'Community Trusted', 'Fast Shipper'],
+  responseRate: 98,
+  communityRank: 'Elite',
+};
+
+const kicksellerSocialStimulus = {
+  verifiedBy: 28,
+  mutualConnections: 1,
+  recentBuyers: ['RetroRunner', 'SneakPeak', 'HypeHunter'],
+  badges: ['Verified Seller', 'Fast Shipper'],
+  responseRate: 95,
+  communityRank: 'Pro',
+};
+
+const airmaxFanSocialStimulus = {
+  verifiedBy: 4,
+  mutualConnections: 0,
+  recentBuyers: ['NewKid'],
+  badges: [],
+  responseRate: 80,
+  communityRank: 'Newcomer',
+};
+
+// Controlled social-trust stimuli keyed by seller handle. Numeric keys preserve
+// compatibility with the fallback mock listings used when the API is unavailable.
 export const mockSocialData = {
-  1: {
-    verifiedBy: 12,
-    mutualConnections: 3,
-    recentBuyers: ['Jordan23', 'KickzKing', 'SoleSeeker'],
-    badges: ['Top Seller', 'Community Trusted', 'Fast Shipper'],
-    responseRate: 98,
-    communityRank: 'Elite',
-  },
-  2: {
-    verifiedBy: 28,
-    mutualConnections: 1,
-    recentBuyers: ['RetroRunner', 'SneakPeak', 'HypeHunter'],
-    badges: ['Verified Seller', 'Fast Shipper'],
-    responseRate: 95,
-    communityRank: 'Pro',
-  },
-  3: {
-    verifiedBy: 4,
-    mutualConnections: 0,
-    recentBuyers: ['NewKid'],
-    badges: [],
-    responseRate: 80,
-    communityRank: 'Newcomer',
-  },
+  sneakerhead1: sneakerheadSocialStimulus,
+  kickseller: kicksellerSocialStimulus,
+  airmax_fan: airmaxFanSocialStimulus,
+  1: sneakerheadSocialStimulus,
+  2: kicksellerSocialStimulus,
+  3: airmaxFanSocialStimulus,
 };

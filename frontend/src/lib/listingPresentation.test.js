@@ -40,4 +40,16 @@ describe('listing presentation helpers', () => {
     expect(social.recentBuyers).toEqual(['aisha_kicks', 'sole_sam']);
     expect(social.mutualConnectionRecords).toHaveLength(2);
   });
+
+  it('keeps controlled badge stimuli attached to the seller handle when database ids change', () => {
+    const social = getListingSocialData({
+      seller_id: 42,
+      seller_username: 'sneakerhead1',
+      seller_mutual_connection_count: 3,
+      seller_mutual_connections: [],
+    });
+
+    expect(social.communityRank).toBe('Elite');
+    expect(social.badges).toEqual(['Top Seller', 'Community Trusted', 'Fast Shipper']);
+  });
 });

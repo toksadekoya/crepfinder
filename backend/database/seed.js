@@ -6,18 +6,22 @@ const seed = async () => {
   try {
     await client.query('BEGIN');
 
-    // Clear existing data
-    await client.query('DELETE FROM trust_measurements');
-    await client.query('DELETE FROM messages');
-    await client.query('DELETE FROM reviews');
-    await client.query('DELETE FROM purchase_requests');
-    await client.query('DELETE FROM condition_assignments');
-    await client.query('DELETE FROM mutual_connections');
-    await client.query('DELETE FROM participant_codes');
-    await client.query('DELETE FROM social_verifications');
-    await client.query('DELETE FROM ab_conditions');
-    await client.query('DELETE FROM listings');
-    await client.query('DELETE FROM users');
+    // Keep seeded prototype data deterministic across repeated local resets.
+    await client.query(`
+      TRUNCATE TABLE
+        trust_measurements,
+        messages,
+        reviews,
+        purchase_requests,
+        condition_assignments,
+        mutual_connections,
+        participant_codes,
+        social_verifications,
+        ab_conditions,
+        listings,
+        users
+      RESTART IDENTITY CASCADE
+    `);
 
     // Seed users
     const passwordHash = await bcrypt.hash('password123', 10);
