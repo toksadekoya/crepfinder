@@ -5,18 +5,20 @@ import FilterChips from './FilterChips.jsx';
 import { mockListings } from '../mockData.js';
 import { formatListingCount, getBrandFilters } from '../lib/listingPresentation.js';
 
-export default function ListingsPage({ condition }) {
+export default function ListingsPage({ condition, participant }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeBrand, setActiveBrand] = useState('All');
   const [query, setQuery] = useState('');
 
   useEffect(() => {
-    api.get('/api/listings')
+    api.get('/api/listings', {
+      params: { participant_code: participant?.participantCode },
+    })
       .then(res => setListings(res.data))
       .catch(() => setListings(mockListings))
       .finally(() => setLoading(false));
-  }, []);
+  }, [participant?.participantCode]);
 
   const brands = getBrandFilters(listings);
   const normalizedQuery = query.trim().toLowerCase();

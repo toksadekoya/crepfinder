@@ -168,6 +168,7 @@ Postgres: localhost:5432
 - Basic non-real-time messaging
 - Google and LinkedIn OAuth sign-in when configured
 - Challenge-code social verification
+- Database-backed mutual connection cues
 - Transaction-locked review eligibility
 - Random A/B condition assignment
 - McKnight trust questionnaire

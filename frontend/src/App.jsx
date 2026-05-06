@@ -103,7 +103,11 @@ export default function App() {
           <Route path="/auth/callback" element={<AuthCallback onAuthUpdate={setAuthStatus} />} />
           <Route
             path="/"
-            element={studySession.completedAt ? <Navigate to="/debrief" replace /> : <ListingsPage condition={condition} />}
+            element={
+              studySession.completedAt
+                ? <Navigate to="/debrief" replace />
+                : <ListingsPage condition={condition} participant={studySession} />
+            }
           />
           <Route
             path="/listing/:id"

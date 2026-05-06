@@ -3,6 +3,11 @@ import pool from '../database/db.js';
 
 const router = Router();
 
+function normalizeParticipantCode(value) {
+  const code = String(value ?? '').trim().toUpperCase();
+  return /^P[0-9]{3}$/.test(code) ? code : null;
+}
+
 const socialVerificationSelect = `
   (
     SELECT json_build_object(
@@ -26,8 +31,35 @@ const socialVerificationSelect = `
   ) AS seller_social_verification
 `;
 
+function mutualConnectionsSelect(participantPlaceholder = '$1') {
+  return `
+    COALESCE((
+      SELECT json_agg(
+        json_build_object(
+          'id', mc.id,
+          'connection_label', mc.connection_label,
+          'connection_handle', mc.connection_handle,
+          'relationship_context', mc.relationship_context
+        )
+        ORDER BY mc.id
+      )
+      FROM mutual_connections mc
+      WHERE mc.seller_id = u.id
+        AND (mc.participant_code IS NULL OR mc.participant_code = ${participantPlaceholder})
+    ), '[]'::json) AS seller_mutual_connections,
+    (
+      SELECT COUNT(*)::int
+      FROM mutual_connections mc
+      WHERE mc.seller_id = u.id
+        AND (mc.participant_code IS NULL OR mc.participant_code = ${participantPlaceholder})
+    ) AS seller_mutual_connection_count
+  `;
+}
+
 // GET /api/listings
 router.get('/', async (req, res) => {
+  const participantCode = normalizeParticipantCode(req.query.participant_code);
+
   try {
     const result = await pool.query(`
       SELECT l.*, u.username AS seller_username, u.id AS seller_id,
@@ -43,11 +75,12 @@ router.get('/', async (req, res) => {
          FROM reviews r2
          JOIN listings l2 ON r2.listing_id = l2.id
          WHERE l2.user_id = u.id) AS seller_review_count,
-        ${socialVerificationSelect}
+        ${socialVerificationSelect},
+        ${mutualConnectionsSelect('$1')}
       FROM listings l
       JOIN users u ON l.user_id = u.id
       ORDER BY l.created_at DESC
-    `);
+    `, [participantCode]);
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -57,6 +90,8 @@ router.get('/', async (req, res) => {
 
 // GET /api/listings/:id
 router.get('/:id', async (req, res) => {
+  const participantCode = normalizeParticipantCode(req.query.participant_code);
+
   try {
     const { id } = req.params;
     const listingResult = await pool.query(`
@@ -73,11 +108,12 @@ router.get('/:id', async (req, res) => {
          FROM reviews r2
          JOIN listings l2 ON r2.listing_id = l2.id
          WHERE l2.user_id = u.id) AS seller_review_count,
-        ${socialVerificationSelect}
+        ${socialVerificationSelect},
+        ${mutualConnectionsSelect('$1')}
       FROM listings l
       JOIN users u ON l.user_id = u.id
-      WHERE l.id = $1
-    `, [id]);
+      WHERE l.id = $2
+    `, [participantCode, id]);
 
     if (listingResult.rows.length === 0) {
       return res.status(404).json({ error: 'Listing not found' });

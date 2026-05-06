@@ -275,7 +275,9 @@ export default function ListingDetail({ condition, participant, onStudyComplete 
     const fetchData = async () => {
       try {
         const [listingRes, reviewsRes] = await Promise.all([
-          api.get(`/api/listings/${id}`),
+          api.get(`/api/listings/${id}`, {
+            params: { participant_code: participant?.participantCode },
+          }),
           api.get(`/api/reviews/${id}`),
         ]);
         setListing(listingRes.data);
@@ -289,7 +291,7 @@ export default function ListingDetail({ condition, participant, onStudyComplete 
       }
     };
     fetchData();
-  }, [id]);
+  }, [id, participant?.participantCode]);
 
   if (loading) return <div className="flex justify-center py-20 text-muted">Loading…</div>;
   if (!listing) return (

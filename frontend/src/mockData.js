@@ -16,6 +16,12 @@ export const mockListings = [
     seller_oauth_email_verified: true,
     seller_avg_rating: '4.80',
     seller_review_count: 24,
+    seller_mutual_connection_count: 3,
+    seller_mutual_connections: [
+      { id: 1, connection_label: 'Jordan23', connection_handle: 'Jordan23', relationship_context: 'previous_buyer' },
+      { id: 2, connection_label: 'KickzKing', connection_handle: 'KickzKing', relationship_context: 'previous_buyer' },
+      { id: 3, connection_label: 'SoleSeeker', connection_handle: 'SoleSeeker', relationship_context: 'previous_buyer' },
+    ],
     seller_social_verification: {
       id: 1,
       platform: 'Instagram',
@@ -42,6 +48,12 @@ export const mockListings = [
     seller_oauth_email_verified: true,
     seller_avg_rating: '4.80',
     seller_review_count: 24,
+    seller_mutual_connection_count: 3,
+    seller_mutual_connections: [
+      { id: 1, connection_label: 'Jordan23', connection_handle: 'Jordan23', relationship_context: 'previous_buyer' },
+      { id: 2, connection_label: 'KickzKing', connection_handle: 'KickzKing', relationship_context: 'previous_buyer' },
+      { id: 3, connection_label: 'SoleSeeker', connection_handle: 'SoleSeeker', relationship_context: 'previous_buyer' },
+    ],
     seller_social_verification: {
       id: 1,
       platform: 'Instagram',
@@ -68,6 +80,10 @@ export const mockListings = [
     seller_oauth_email_verified: true,
     seller_avg_rating: '4.60',
     seller_review_count: 41,
+    seller_mutual_connection_count: 1,
+    seller_mutual_connections: [
+      { id: 4, connection_label: 'RetroRunner', connection_handle: 'RetroRunner', relationship_context: 'previous_buyer' },
+    ],
     seller_social_verification: {
       id: 2,
       platform: 'TikTok',
@@ -94,6 +110,10 @@ export const mockListings = [
     seller_oauth_email_verified: true,
     seller_avg_rating: '4.60',
     seller_review_count: 41,
+    seller_mutual_connection_count: 1,
+    seller_mutual_connections: [
+      { id: 4, connection_label: 'RetroRunner', connection_handle: 'RetroRunner', relationship_context: 'previous_buyer' },
+    ],
     seller_social_verification: {
       id: 2,
       platform: 'TikTok',
@@ -120,6 +140,8 @@ export const mockListings = [
     seller_oauth_email_verified: false,
     seller_avg_rating: '5.00',
     seller_review_count: 7,
+    seller_mutual_connection_count: 0,
+    seller_mutual_connections: [],
     seller_social_verification: null,
   },
 ];

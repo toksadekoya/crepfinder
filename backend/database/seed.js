@@ -12,6 +12,7 @@ const seed = async () => {
     await client.query('DELETE FROM reviews');
     await client.query('DELETE FROM purchase_requests');
     await client.query('DELETE FROM condition_assignments');
+    await client.query('DELETE FROM mutual_connections');
     await client.query('DELETE FROM participant_codes');
     await client.query('DELETE FROM social_verifications');
     await client.query('DELETE FROM ab_conditions');
@@ -47,6 +48,17 @@ const seed = async () => {
       `INSERT INTO participant_codes (participant_code, user_agent) VALUES
         ('P900', 'seeded-review-participant'),
         ('P901', 'seeded-message-participant')`
+    );
+
+    await client.query(
+      `INSERT INTO mutual_connections
+        (seller_id, participant_code, connection_label, connection_handle, relationship_context)
+       VALUES
+        ($1, NULL, 'Jordan23', 'Jordan23', 'previous_buyer'),
+        ($1, NULL, 'KickzKing', 'KickzKing', 'previous_buyer'),
+        ($1, NULL, 'SoleSeeker', 'SoleSeeker', 'previous_buyer'),
+        ($2, NULL, 'RetroRunner', 'RetroRunner', 'previous_buyer')`,
+      [userIds[0], userIds[1]]
     );
 
     const purchaseResult = await client.query(

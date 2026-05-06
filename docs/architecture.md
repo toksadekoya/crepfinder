@@ -16,6 +16,8 @@ flowchart LR
   A --> B["Browse listings"]
   B --> D["Listing detail / seller panel"]
   B --> Search["Keyword and brand search"]
+  B --> MC["GET database-backed mutual connection cues"]
+  MC --> PG
   D --> Msg["POST /api/messages"]
   D --> T["Trust questionnaire modal"]
   T --> Q["POST /api/trust"]
@@ -38,6 +40,7 @@ flowchart LR
     OAuthStart
     B
     Search
+    MC
     D
     Msg
     T
@@ -51,6 +54,7 @@ flowchart LR
     OAuthCallback
     LinkedInCallback
     A
+    MC
     Q
     PR
     E["GET /api/research/export.csv"]
@@ -66,7 +70,7 @@ flowchart LR
 
 ## Data Captured
 
-The backend stores participant codes, condition assignments, consent timestamps, trust questionnaire responses, selected listing IDs, social verification requests, moderation status, and exportable research data. Product listings and trust cues are controlled prototype materials rather than live marketplace records.
+The backend stores participant codes, condition assignments, consent timestamps, trust questionnaire responses, selected listing IDs, social verification requests, mutual-connection cue records, moderation status, and exportable research data. Product listings and trust cues are controlled prototype materials rather than live marketplace records.
 
 ## OAuth Scope
 

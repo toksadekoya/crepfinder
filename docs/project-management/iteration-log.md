@@ -144,6 +144,27 @@ Validation used:
 | Backend import check | Passed |
 | Frontend production build | Passed |
 
+## Iteration 8: Mutual Connection Persistence
+
+Primary aim: move mutual connection cues from frontend-only mock data into the relational schema so the Condition A social graph cue is traceable in the implementation and ERD.
+
+Completed work:
+
+| Change | Rationale | Source Evidence |
+| --- | --- | --- |
+| Added `mutual_connections` table | Stores controlled social graph stimuli as database records rather than frontend-only mock data | `backend/database/schema.sql` |
+| Seeded seller mutual connection cues | Keeps the A/B study cue consistent while making it auditable in the database | `backend/database/seed.js` |
+| Exposed mutual connection rows through listing endpoints | Lets listing cards and seller panels render social graph cues from API data | `backend/routes/listings.js` |
+| Updated frontend presentation helpers | Uses backend mutual connection counts/details when available, with mock data only as a local fallback | `frontend/src/lib/listingPresentation.js` |
+
+Validation used:
+
+| Check | Outcome |
+| --- | --- |
+| Backend tests | Passed |
+| Frontend tests | Passed |
+| Frontend production build | Passed |
+
 ## Summary
 
 The iteration log supports the claim that implementation was not completed as a single linear build. Instead, the artefact was refined through task-based passes, with high-risk research validity issues addressed before optional engineering features. This is consistent with a Kanban-style workflow layered on top of an initially sequential dissertation plan.

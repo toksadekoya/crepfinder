@@ -111,6 +111,25 @@ CREATE TABLE IF NOT EXISTS participant_codes (
   consented_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Controlled mutual-connection cues used in Condition A. Rows with a NULL
+-- participant_code are default prototype stimuli; participant-specific rows
+-- can be added later without changing the buyer-facing interface.
+CREATE TABLE IF NOT EXISTS mutual_connections (
+  id SERIAL PRIMARY KEY,
+  seller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  participant_code VARCHAR(4) REFERENCES participant_codes(participant_code) ON DELETE CASCADE,
+  connection_label VARCHAR(100) NOT NULL,
+  connection_handle VARCHAR(100),
+  relationship_context VARCHAR(120) NOT NULL DEFAULT 'previous_buyer',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_mutual_connections_seller_id
+  ON mutual_connections(seller_id);
+
+CREATE INDEX IF NOT EXISTS idx_mutual_connections_participant_code
+  ON mutual_connections(participant_code);
+
 CREATE TABLE IF NOT EXISTS condition_assignments (
   id SERIAL PRIMARY KEY,
   participant_code VARCHAR(4) REFERENCES participant_codes(participant_code) ON DELETE CASCADE UNIQUE,

@@ -22,6 +22,7 @@ const ratingFormatter = new Intl.NumberFormat('en-GB', {
 const fallbackSocialData = {
   verifiedBy: 0,
   mutualConnections: 0,
+  mutualConnectionRecords: [],
   recentBuyers: [],
   badges: [],
   responseRate: 0,
@@ -90,7 +91,27 @@ export function getListingAverageRating(listing) {
 }
 
 export function getListingSocialData(listing) {
-  return mockSocialData[Number(listing?.seller_id)] ?? fallbackSocialData;
+  const fallback = mockSocialData[Number(listing?.seller_id)] ?? fallbackSocialData;
+  const backendConnections = Array.isArray(listing?.seller_mutual_connections)
+    ? listing.seller_mutual_connections
+    : null;
+  const backendCount = Number(listing?.seller_mutual_connection_count);
+
+  if (!backendConnections && !Number.isFinite(backendCount)) {
+    return fallback;
+  }
+
+  const mutualConnectionRecords = backendConnections ?? [];
+  const recentBuyers = mutualConnectionRecords
+    .map((connection) => connection.connection_handle || connection.connection_label)
+    .filter(Boolean);
+
+  return {
+    ...fallback,
+    mutualConnections: Number.isFinite(backendCount) ? backendCount : mutualConnectionRecords.length,
+    mutualConnectionRecords,
+    recentBuyers: recentBuyers.length ? recentBuyers : fallback.recentBuyers,
+  };
 }
 
 export function getListingSocialVerification(listing) {

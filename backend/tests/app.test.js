@@ -71,4 +71,16 @@ describe('CrepFinder API contract', () => {
     expect(response.body.error).toContain('profile_url or username');
     expect(mockPool.connect).not.toHaveBeenCalled();
   });
+
+  it('passes participant codes into listing queries for mutual connection lookup', async () => {
+    mockPool.query.mockResolvedValueOnce({ rows: [] });
+
+    const response = await request(app).get('/api/listings?participant_code=P123');
+
+    expect(response.status).toBe(200);
+    expect(mockPool.query).toHaveBeenCalledWith(
+      expect.stringContaining('mutual_connections'),
+      ['P123']
+    );
+  });
 });
