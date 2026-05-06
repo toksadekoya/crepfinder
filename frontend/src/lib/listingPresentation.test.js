@@ -3,6 +3,7 @@ import {
   formatPrice,
   formatUkSize,
   getListingSocialData,
+  getListingSellerBadges,
   getSellerOAuthLabel,
 } from './listingPresentation.js';
 
@@ -39,5 +40,22 @@ describe('listing presentation helpers', () => {
     expect(social.mutualConnections).toBe(2);
     expect(social.recentBuyers).toEqual(['aisha_kicks', 'sole_sam']);
     expect(social.mutualConnectionRecords).toHaveLength(2);
+  });
+
+  it('derives seller badges from platform evidence when the API has not supplied labels', () => {
+    const badges = getListingSellerBadges({
+      seller_avg_rating: '4.50',
+      seller_review_count: 3,
+      seller_completed_purchase_count: 3,
+      seller_fast_shipping_review_count: 1,
+      seller_mutual_connection_count: 2,
+      seller_social_verification: { status: 'verified' },
+    });
+
+    expect(badges).toEqual([
+      'Top Seller',
+      'Community Trusted',
+      'Fast Shipper',
+    ]);
   });
 });

@@ -3,9 +3,63 @@ import pool from '../database/db.js';
 
 const router = Router();
 
+const badgeThresholds = {
+  topSeller: {
+    minimumCompletedPurchases: 3,
+    minimumReviews: 3,
+    minimumAverageRating: 4,
+  },
+  communityTrusted: {
+    minimumMutualConnections: 2,
+  },
+};
+
 function normalizeParticipantCode(value) {
   const code = String(value ?? '').trim().toUpperCase();
   return /^P[0-9]{3}$/.test(code) ? code : null;
+}
+
+function toNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function awardSellerBadges(listing) {
+  const badges = [];
+  const averageRating = toNumber(listing.seller_avg_rating);
+  const reviewCount = toNumber(listing.seller_review_count);
+  const completedPurchases = toNumber(listing.seller_completed_purchase_count);
+  const fastShippingReviews = toNumber(listing.seller_fast_shipping_review_count);
+  const mutualConnections = toNumber(listing.seller_mutual_connection_count);
+  const socialStatus = listing.seller_social_verification?.status;
+
+  if (
+    completedPurchases >= badgeThresholds.topSeller.minimumCompletedPurchases &&
+    reviewCount >= badgeThresholds.topSeller.minimumReviews &&
+    averageRating >= badgeThresholds.topSeller.minimumAverageRating
+  ) {
+    badges.push('Top Seller');
+  }
+
+  if (
+    socialStatus === 'verified' &&
+    mutualConnections >= badgeThresholds.communityTrusted.minimumMutualConnections
+  ) {
+    badges.push('Community Trusted');
+  }
+
+  if (completedPurchases > 0 && fastShippingReviews > 0) {
+    badges.push('Fast Shipper');
+  }
+
+  return badges;
+}
+
+function withSellerBadges(row) {
+  return {
+    ...row,
+    seller_badges: awardSellerBadges(row),
+  };
 }
 
 const socialVerificationSelect = `
@@ -75,13 +129,24 @@ router.get('/', async (req, res) => {
          FROM reviews r2
          JOIN listings l2 ON r2.listing_id = l2.id
          WHERE l2.user_id = u.id) AS seller_review_count,
+        (SELECT COUNT(*)
+         FROM purchase_requests pr
+         JOIN listings l2 ON pr.listing_id = l2.id
+         WHERE l2.user_id = u.id
+           AND pr.status = 'completed') AS seller_completed_purchase_count,
+        (SELECT COUNT(*)
+         FROM reviews r2
+         JOIN listings l2 ON r2.listing_id = l2.id
+         WHERE l2.user_id = u.id
+           AND r2.is_transaction_locked = TRUE
+           AND COALESCE(r2.comment, '') ~* '(fast|quick|speedy|prompt).*(ship|shipping|delivery|dispatch|posted|sent)') AS seller_fast_shipping_review_count,
         ${socialVerificationSelect},
         ${mutualConnectionsSelect('$1')}
       FROM listings l
       JOIN users u ON l.user_id = u.id
       ORDER BY l.created_at DESC
     `, [participantCode]);
-    res.json(result.rows);
+    res.json(result.rows.map(withSellerBadges));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch listings' });
@@ -108,6 +173,17 @@ router.get('/:id', async (req, res) => {
          FROM reviews r2
          JOIN listings l2 ON r2.listing_id = l2.id
          WHERE l2.user_id = u.id) AS seller_review_count,
+        (SELECT COUNT(*)
+         FROM purchase_requests pr
+         JOIN listings l2 ON pr.listing_id = l2.id
+         WHERE l2.user_id = u.id
+           AND pr.status = 'completed') AS seller_completed_purchase_count,
+        (SELECT COUNT(*)
+         FROM reviews r2
+         JOIN listings l2 ON r2.listing_id = l2.id
+         WHERE l2.user_id = u.id
+           AND r2.is_transaction_locked = TRUE
+           AND COALESCE(r2.comment, '') ~* '(fast|quick|speedy|prompt).*(ship|shipping|delivery|dispatch|posted|sent)') AS seller_fast_shipping_review_count,
         ${socialVerificationSelect},
         ${mutualConnectionsSelect('$1')}
       FROM listings l
@@ -118,7 +194,7 @@ router.get('/:id', async (req, res) => {
     if (listingResult.rows.length === 0) {
       return res.status(404).json({ error: 'Listing not found' });
     }
-    res.json(listingResult.rows[0]);
+    res.json(withSellerBadges(listingResult.rows[0]));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch listing' });

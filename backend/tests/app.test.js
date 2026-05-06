@@ -83,4 +83,27 @@ describe('CrepFinder API contract', () => {
       ['P123']
     );
   });
+
+  it('awards seller badges from marketplace evidence returned by the listing query', async () => {
+    mockPool.query.mockResolvedValueOnce({
+      rows: [{
+        id: 1,
+        seller_avg_rating: '4.50',
+        seller_review_count: '3',
+        seller_completed_purchase_count: '3',
+        seller_fast_shipping_review_count: '1',
+        seller_mutual_connection_count: 2,
+        seller_social_verification: { status: 'verified' },
+      }],
+    });
+
+    const response = await request(app).get('/api/listings?participant_code=P123');
+
+    expect(response.status).toBe(200);
+    expect(response.body[0].seller_badges).toEqual([
+      'Top Seller',
+      'Community Trusted',
+      'Fast Shipper',
+    ]);
+  });
 });
