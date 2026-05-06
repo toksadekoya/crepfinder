@@ -27,7 +27,7 @@ function NotFound() {
 
 export default function App() {
   const location = useLocation();
-  const ethicsReference = import.meta.env.VITE_ETHICS_REFERENCE || 'Ethics ref. pending confirmation';
+  const ethicsReference = import.meta.env.VITE_ETHICS_REFERENCE || 'Ethics ref. TETHIC-2025-112494';
   const [studySession, setStudySession] = useState(() => getStoredStudySession());
   const [authStatus, setAuthStatus] = useState({
     authenticated: false,

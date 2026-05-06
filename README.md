@@ -91,7 +91,7 @@ Frontend:
 
 ```text
 VITE_API_BASE_URL=https://your-backend-url
-VITE_ETHICS_REFERENCE=<ethics reference>
+VITE_ETHICS_REFERENCE=Ethics ref. TETHIC-2025-112494
 ```
 
 `VITE_API_URL` also works as an alias for `VITE_API_BASE_URL`.

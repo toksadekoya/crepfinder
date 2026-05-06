@@ -52,7 +52,7 @@ services:
       - backend
     environment:
       VITE_API_BASE_URL: http://localhost:3001
-      VITE_ETHICS_REFERENCE: Ethics ref. pending confirmation
+      VITE_ETHICS_REFERENCE: Ethics ref. TETHIC-2025-112494
     ports:
       - "5173:5173"
     volumes:
