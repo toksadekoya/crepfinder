@@ -26,10 +26,12 @@ const seed = async () => {
     // Seed users
     const passwordHash = await bcrypt.hash('password123', 10);
     const usersResult = await client.query(
-      `INSERT INTO users (username, email, password_hash, created_at) VALUES
-        ('sneakerhead1', 'user1@example.com', $1, NOW() - INTERVAL '18 months'),
-        ('kickseller', 'user2@example.com', $1, NOW() - INTERVAL '19 days'),
-        ('airmax_fan', 'user3@example.com', $1, NOW() - INTERVAL '7 months')
+      `INSERT INTO users
+        (username, email, password_hash, google_id, display_name, oauth_email_verified, auth_provider, created_at)
+       VALUES
+        ('sneakerhead1', 'user1@example.com', $1, 'google-seed-sneakerhead1', 'Sneaker Head', TRUE, 'google', NOW() - INTERVAL '18 months'),
+        ('kickseller', 'user2@example.com', $1, NULL, NULL, FALSE, 'password', NOW() - INTERVAL '19 days'),
+        ('airmax_fan', 'user3@example.com', $1, NULL, NULL, FALSE, 'password', NOW() - INTERVAL '7 months')
       RETURNING id`,
       [passwordHash]
     );
