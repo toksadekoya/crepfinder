@@ -313,11 +313,11 @@ export default function ListingDetail({ condition, participant, onStudyComplete 
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
         <div className="space-y-5">
-          <div className="overflow-hidden rounded-[10px] border border-border-subtle bg-subtle">
+          <div className="overflow-hidden rounded-[10px] border border-border-subtle bg-surface">
             <img
               src={getListingImage(listing)}
               alt={`${listing.brand} ${listing.model}`}
-              className="aspect-square w-full object-cover"
+              className="aspect-square w-full object-contain p-8"
             />
           </div>
 

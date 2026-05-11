@@ -40,11 +40,11 @@ const seed = async () => {
     // Seed listings
     const listingsResult = await client.query(
       `INSERT INTO listings (user_id, brand, model, size, condition, price, description, image_url) VALUES
-        ($1, 'Nike', 'Air Max 90', 10.0, 'Like New', 120.00, 'Barely worn, clean pair', '/listings/air-max-90.svg'),
-        ($1, 'Jordan', 'Air Jordan 1 Retro High OG', 9.5, 'Good', 180.00, 'Some creasing, still clean', '/listings/air-jordan-1-retro-high-og.svg'),
-        ($2, 'Adidas', 'Yeezy Boost 350 V2', 11.0, 'New', 320.00, 'Brand new in box', '/listings/yeezy-boost-350-v2.svg'),
-        ($2, 'New Balance', '990v5', 10.5, 'Fair', 75.00, 'Well worn but still solid', '/listings/new-balance-990v5.svg'),
-        ($3, 'Nike', 'Dunk Low Retro', 9.0, 'Like New', 140.00, 'Worn twice only', '/listings/dunk-low-retro.svg')
+        ($1, 'Nike', 'Air Max 90', 10.0, 'Like New', 120.00, 'Barely worn, clean pair', '/listings/air-max-90.jpg'),
+        ($1, 'Jordan', 'Air Jordan 1 Retro High OG', 9.5, 'Good', 180.00, 'Some creasing, still clean', '/listings/air-jordan-1-retro-high-og.jpg'),
+        ($2, 'Adidas', 'Yeezy Boost 350 V2', 11.0, 'New', 320.00, 'Brand new in box', '/listings/yeezy-boost-350-v2.jpg'),
+        ($2, 'New Balance', '990v5', 10.5, 'Fair', 75.00, 'Well worn but still solid', '/listings/new-balance-990v5.jpg'),
+        ($3, 'Nike', 'Dunk Low Retro', 9.0, 'Like New', 140.00, 'Worn twice only', '/listings/dunk-low-retro.jpg')
       RETURNING id`,
       [userIds[0], userIds[1], userIds[2]]
     );

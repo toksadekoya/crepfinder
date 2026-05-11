@@ -1,11 +1,11 @@
 import { mockListings, mockReviews, mockSocialData } from '../mockData.js';
 
 const listingImages = {
-  1: '/listings/air-max-90.svg',
-  2: '/listings/air-jordan-1-retro-high-og.svg',
-  3: '/listings/yeezy-boost-350-v2.svg',
-  4: '/listings/new-balance-990v5.svg',
-  5: '/listings/dunk-low-retro.svg',
+  1: '/listings/air-max-90.jpg',
+  2: '/listings/air-jordan-1-retro-high-og.jpg',
+  3: '/listings/yeezy-boost-350-v2.jpg',
+  4: '/listings/new-balance-990v5.jpg',
+  5: '/listings/dunk-low-retro.jpg',
 };
 
 const priceFormatter = new Intl.NumberFormat('en-GB', {
@@ -45,7 +45,9 @@ export function formatRating(value) {
 }
 
 export function getListingImage(listing) {
-  if (listing?.image_url && !listing.image_url.includes('via.placeholder.com')) {
+  const imageUrl = listing?.image_url;
+
+  if (imageUrl && !imageUrl.includes('via.placeholder.com') && !imageUrl.endsWith('.svg')) {
     return listing.image_url;
   }
 

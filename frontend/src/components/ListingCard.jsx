@@ -77,11 +77,11 @@ export default function ListingCard({ listing, condition }) {
       aria-label={`View ${brand} ${model}, ${formatPrice(price)}, ${formatUkSize(size)}, sold by @${seller_username}`}
       className="group flex flex-col overflow-hidden rounded-[10px] border border-border-subtle bg-surface transition-shadow hover:shadow-card"
     >
-      <div className="relative aspect-square overflow-hidden border-b border-border-subtle bg-subtle">
+      <div className="relative aspect-square overflow-hidden border-b border-border-subtle bg-surface">
         <img
           src={getListingImage(listing)}
           alt={`${brand} ${model}`}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.015]"
+          className="h-full w-full object-contain p-6 transition-transform duration-300 group-hover:scale-[1.015]"
         />
         <span className="absolute left-3 top-3 rounded-full border border-white/80 bg-white/90 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-secondary backdrop-blur">
           {listingCondition}
