@@ -28,7 +28,8 @@ describe('ConsentScreen', () => {
     expect(screen.getByRole('button', { name: /continue with google/i })).toBeEnabled();
     expect(screen.getByRole('button', { name: /continue with linkedin/i })).toBeEnabled();
     expect(screen.getByRole('button', { name: /begin study/i })).toBeInTheDocument();
-    expect(screen.getByText(/study responses remain linked to your participant code/i)).toBeInTheDocument();
+    expect(screen.getByText(/participant code rather than your name/i)).toBeInTheDocument();
+    expect(screen.getByText(/does not process payments, contact real sellers, or require account login/i)).toBeInTheDocument();
   });
 
   it('has no obvious automated accessibility violations', async () => {

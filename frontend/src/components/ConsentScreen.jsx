@@ -9,11 +9,14 @@ export default function ConsentScreen({ onConsent, authStatus, onAuthUpdate }) {
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState('');
   const user = authStatus?.user;
+  const ethicsReference = import.meta.env.VITE_ETHICS_REFERENCE || 'Ethics ref. TETHIC-2025-112494';
   const oauthProviders = [
     { label: 'Google', enabled: authStatus?.googleOAuthEnabled, onClick: beginGoogleOAuth },
     { label: 'LinkedIn', enabled: authStatus?.linkedinOAuthEnabled, onClick: beginLinkedInOAuth },
   ];
-  const showOAuthPanel = user || oauthProviders.some((provider) => provider.enabled) || import.meta.env.DEV;
+  const showOAuthPanel = import.meta.env.DEV && (
+    user || oauthProviders.some((provider) => provider.enabled)
+  );
 
   const handleLogout = async () => {
     setSigningOut(true);
@@ -73,6 +76,9 @@ export default function ConsentScreen({ onConsent, authStatus, onAuthUpdate }) {
             <div>
               <span className="font-logo text-[16px] font-bold tracking-[-0.03em] text-primary">CrepFinder</span>
             </div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-tertiary">
+              {ethicsReference}
+            </p>
             <h1 className="text-[26px] font-medium tracking-[-0.03em] text-primary">Participant Consent</h1>
             <p className="text-[14px] leading-[1.55] text-secondary">
               This study asks you to browse a fictional peer-to-peer sneaker marketplace and evaluate one seller.
@@ -91,11 +97,30 @@ export default function ConsentScreen({ onConsent, authStatus, onAuthUpdate }) {
               The interface condition is assigned automatically so the comparison remains controlled.
             </div>
             <div className="rounded-[10px] border border-border-subtle bg-surface p-4">
-              If you choose optional Google or LinkedIn sign-in, the prototype stores your account ID, email,
-              display name, avatar URL and login time for authentication only. The study responses remain linked
-              to your participant code.
+              You can withdraw after completing the task by quoting your participant code to the researcher before
+              the project analysis is finalised.
             </div>
           </div>
+
+          <details className="rounded-[10px] border border-border-subtle bg-surface p-4 text-[14px] leading-[1.55] text-secondary">
+            <summary className="cursor-pointer text-[13px] font-medium text-primary">
+              Read participant information
+            </summary>
+            <div className="mt-3 grid gap-2">
+              <p>
+                The evaluation is expected to take approximately 8-15 minutes. You will browse a fictional listing,
+                decide whether to request a purchase, complete a short trust questionnaire, and then open a post-task
+                survey.
+              </p>
+              <p>
+                The prototype records your participant code, assigned interface condition, selected listing and
+                questionnaire responses. It does not process payments, contact real sellers, or require account login.
+              </p>
+              <p>
+                Some trust cues are controlled research stimuli so that both interface conditions can be compared fairly.
+              </p>
+            </div>
+          </details>
 
           {showOAuthPanel && (
             <div className="rounded-[10px] border border-border-subtle bg-surface p-4">

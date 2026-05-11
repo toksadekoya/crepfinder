@@ -19,7 +19,7 @@ export default function Navbar({ authStatus, onAuthUpdate }) {
   const { pathname } = useLocation();
   const [signingOut, setSigningOut] = useState(false);
   const user = authStatus?.user;
-  const storedConnection = getStoredOAuthConnection();
+  const storedConnection = import.meta.env.DEV ? getStoredOAuthConnection() : null;
   const connectedProvider = user?.auth_provider || storedConnection?.provider;
   const connectedEmail = user?.email || storedConnection?.email;
   const avatarLabel = user ? getInitials(user) : connectedProvider ? 'G' : 'GU';
@@ -28,9 +28,9 @@ export default function Navbar({ authStatus, onAuthUpdate }) {
     { label: 'Google', enabled: authStatus?.googleOAuthEnabled, onClick: beginGoogleOAuth },
     { label: 'LinkedIn', enabled: authStatus?.linkedinOAuthEnabled, onClick: beginLinkedInOAuth },
   ];
-  const showOAuthControl = user
-    || providerButtons.some((provider) => provider.enabled)
-    || import.meta.env.DEV;
+  const showOAuthControl = import.meta.env.DEV && (
+    user || providerButtons.some((provider) => provider.enabled)
+  );
 
   const handleLogout = async () => {
     setSigningOut(true);
