@@ -11,8 +11,8 @@
   <path d="M264 760C332 668 439 613 554 613H704L855 484C885 458 923 444 963 444H1016V499H976C948 499 921 510 899 529L725 689H561C496 689 433 716 387 765L318 838L264 760Z" fill="#FCFBF9"/>
   <path d="M488 490C488 421 544 365 613 365H725V430H623C590 430 564 457 564 490V711H488V490Z" fill="#0C0A09"/>
   <rect x="90" y="90" width="1020" height="1020" rx="46" stroke="#0C0A09" stroke-opacity="0.08" stroke-width="4"/>
-  <text x="90" y="160" fill="#57534E" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="30" font-weight="500" letter-spacing="8">JORDAN</text>
-  <text x="90" y="244" fill="#0C0A09" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="94" font-weight="500" letter-spacing="-4">Air Jordan 1</text>
-  <text x="90" y="334" fill="#57534E" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="52" font-weight="500" letter-spacing="-1">Retro High OG</text>
-  <text x="90" y="1032" fill="#57534E" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="34" font-weight="500" letter-spacing="6">STUDIO CARD</text>
+  <text x="90" y="160" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="30" font-weight="500" letter-spacing="8">JORDAN</text>
+  <text x="90" y="244" fill="#0C0A09" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="94" font-weight="500" letter-spacing="-4">Air Jordan 1</text>
+  <text x="90" y="334" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="52" font-weight="500" letter-spacing="-1">Retro High OG</text>
+  <text x="90" y="1032" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="34" font-weight="500" letter-spacing="6">STUDIO CARD</text>
 </svg>

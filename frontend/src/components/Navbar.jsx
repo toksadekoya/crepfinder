@@ -55,9 +55,8 @@ export default function Navbar({ authStatus, onAuthUpdate }) {
       style={{ borderBottom: '0.5px solid var(--border-subtle)' }}
     >
       <div className="mx-auto flex w-full max-w-[1180px] items-center justify-between gap-4 px-6 py-4">
-        <Link to="/" className="flex items-center gap-2.5 shrink-0" aria-label="CrepFinder home">
-          <span className="h-3.5 w-3.5 rounded-[2px] bg-primary" aria-hidden="true" />
-          <span className="text-[15px] font-medium tracking-[-0.02em] text-primary">
+        <Link to="/" className="shrink-0" aria-label="CrepFinder home">
+          <span className="font-logo text-[16px] font-bold tracking-[-0.03em] text-primary">
             CrepFinder
           </span>
         </Link>

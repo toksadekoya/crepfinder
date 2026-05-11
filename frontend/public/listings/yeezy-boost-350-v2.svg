@@ -12,8 +12,8 @@
   <path d="M234 726C322 638 440 589 564 589H766C833 589 895 611 944 652L996 696L946 746C899 793 836 819 770 819H525C448 819 375 789 321 734L234 646V726Z" fill="#F9FAF7"/>
   <path d="M320 699C379 651 453 624 530 624H790C841 624 889 642 925 673L963 705L920 740C879 773 828 792 775 792H526C470 792 417 773 376 738L320 699Z" fill="#B8B39B"/>
   <path d="M390 675C515 656 640 633 767 607L753 652C646 681 540 704 432 722L390 675Z" fill="#0C0A09" fill-opacity="0.72"/>
-  <text x="90" y="160" fill="#57534E" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="30" font-weight="500" letter-spacing="8">ADIDAS</text>
-  <text x="90" y="246" fill="#0C0A09" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="94" font-weight="500" letter-spacing="-4">Yeezy Boost</text>
-  <text x="90" y="334" fill="#57534E" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="52" font-weight="500" letter-spacing="-1">350 V2</text>
-  <text x="90" y="1032" fill="#57534E" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="34" font-weight="500" letter-spacing="6">RESEARCH SAMPLE</text>
+  <text x="90" y="160" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="30" font-weight="500" letter-spacing="8">ADIDAS</text>
+  <text x="90" y="246" fill="#0C0A09" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="94" font-weight="500" letter-spacing="-4">Yeezy Boost</text>
+  <text x="90" y="334" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="52" font-weight="500" letter-spacing="-1">350 V2</text>
+  <text x="90" y="1032" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="34" font-weight="500" letter-spacing="6">RESEARCH SAMPLE</text>
 </svg>
