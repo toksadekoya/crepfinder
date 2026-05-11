@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
-export const SUS_FORM_URL_TEMPLATE = 'https://docs.google.com/forms/d/e/FORM_ID/viewform?usp=pp_url&entry.ENTRY_ID={participantCode}';
-export const DEBRIEF_FORM_URL_TEMPLATE = 'https://docs.google.com/forms/d/e/FORM_ID/viewform?usp=pp_url&entry.ENTRY_ID={participantCode}';
+export const SUS_FORM_URL_TEMPLATE = 'https://docs.google.com/forms/d/e/1FAIpQLSezT8I2f5a8WTaMHmN5670StA5kyaDk7vQIs7lcCbZGGQKrvg/viewform?usp=pp_url&entry.48634103=PARTICIPANT_CODE_PLACEHOLDER';
+export const DEBRIEF_FORM_URL_TEMPLATE = 'https://docs.google.com/forms/d/e/1FAIpQLScl6_bZg-ffDPYJStTBP9HQis5v6vaqY2tWAW7CGeilIXtLuA/viewform?usp=pp_url&entry.2116702713=PARTICIPANT_CODE_PLACEHOLDER';
 
 export function buildSurveyUrl(template, participantCode) {
-  return template.replace('{participantCode}', encodeURIComponent(participantCode ?? ''));
+  return template.replace('PARTICIPANT_CODE_PLACEHOLDER', encodeURIComponent(participantCode ?? ''));
 }
 
 export default function DebriefScreen({ session }) {

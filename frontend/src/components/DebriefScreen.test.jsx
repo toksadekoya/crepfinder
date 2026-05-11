@@ -28,7 +28,7 @@ describe('DebriefScreen', () => {
   });
 
   it('URL-encodes participant codes before inserting them into survey links', () => {
-    expect(buildSurveyUrl('https://example.test/form?entry.123={participantCode}', 'P 123')).toBe(
+    expect(buildSurveyUrl('https://example.test/form?entry.123=PARTICIPANT_CODE_PLACEHOLDER', 'P 123')).toBe(
       'https://example.test/form?entry.123=P%20123'
     );
   });
