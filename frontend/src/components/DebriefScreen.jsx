@@ -1,11 +1,21 @@
 import { useState } from 'react';
 
+export const SUS_FORM_URL_TEMPLATE = 'https://docs.google.com/forms/d/e/FORM_ID/viewform?usp=pp_url&entry.ENTRY_ID={participantCode}';
+export const DEBRIEF_FORM_URL_TEMPLATE = 'https://docs.google.com/forms/d/e/FORM_ID/viewform?usp=pp_url&entry.ENTRY_ID={participantCode}';
+
+export function buildSurveyUrl(template, participantCode) {
+  return template.replace('{participantCode}', encodeURIComponent(participantCode ?? ''));
+}
+
 export default function DebriefScreen({ session }) {
   const [copied, setCopied] = useState(false);
+  const participantCode = session.participantCode;
+  const usabilitySurveyUrl = buildSurveyUrl(SUS_FORM_URL_TEMPLATE, participantCode);
+  const debriefSurveyUrl = buildSurveyUrl(DEBRIEF_FORM_URL_TEMPLATE, participantCode);
 
   const copyCode = async () => {
     try {
-      await navigator.clipboard.writeText(session.participantCode);
+      await navigator.clipboard.writeText(participantCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -28,7 +38,7 @@ export default function DebriefScreen({ session }) {
         <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-tertiary">Participant code</p>
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <code className="rounded-[10px] bg-subtle px-4 py-3 text-[26px] font-medium tracking-[0.08em] text-primary">
-            {session.participantCode}
+            {participantCode}
           </code>
           <button
             type="button"
@@ -39,6 +49,48 @@ export default function DebriefScreen({ session }) {
           </button>
         </div>
       </div>
+
+      <section className="space-y-4 rounded-[10px] border border-border-subtle bg-surface p-5">
+        <div className="space-y-3 text-[14px] leading-[1.55] text-secondary">
+          <h2 className="text-[18px] font-medium tracking-[-0.02em] text-primary">Complete the final surveys</h2>
+          <p>
+            Thank you for completing the CrepFinder evaluation. Your participant code is:{' '}
+            <span className="font-medium text-primary">{participantCode}</span>
+          </p>
+          <p>
+            To complete your participation, please use this code to fill in the two short surveys below
+            (approximately six minutes in total). Your responses will form part of the project's final evaluation
+            and analysis.
+          </p>
+          <p className="font-medium text-primary">
+            Please complete the surveys in order. Both are required to finalise your participation.
+          </p>
+        </div>
+
+        <div className="grid gap-3">
+          <a
+            href={usabilitySurveyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-center text-[14px] font-medium text-surface transition-colors hover:bg-secondary"
+          >
+            Step 1: Complete the usability survey
+          </a>
+          <a
+            href={debriefSurveyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-full border border-border-strong px-5 py-3 text-center text-[14px] font-medium text-primary transition-colors hover:bg-subtle"
+          >
+            Step 2: Complete the short debrief survey
+          </a>
+        </div>
+
+        <p className="text-[12px] leading-[1.55] text-tertiary">
+          If a survey does not open automatically, copy your participant code above and paste it into the survey
+          when prompted.
+        </p>
+      </section>
 
       <div className="space-y-4 rounded-[10px] border border-border-subtle bg-surface p-5 text-[14px] leading-[1.55] text-secondary">
         <h2 className="text-[18px] font-medium tracking-[-0.02em] text-primary">What the study tested</h2>
