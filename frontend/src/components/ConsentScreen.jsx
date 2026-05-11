@@ -70,9 +70,8 @@ export default function ConsentScreen({ onConsent, authStatus, onAuthUpdate }) {
       <main id="main-content" className="mx-auto flex min-h-screen w-full max-w-[760px] flex-col justify-center px-6 py-10">
         <div className="space-y-8">
           <div className="space-y-3">
-            <div className="flex items-center gap-2.5">
-              <span className="h-3.5 w-3.5 rounded-[2px] bg-primary" aria-hidden="true" />
-              <span className="text-[15px] font-medium tracking-[-0.02em] text-primary">CrepFinder</span>
+            <div>
+              <span className="font-logo text-[16px] font-bold tracking-[-0.03em] text-primary">CrepFinder</span>
             </div>
             <h1 className="text-[26px] font-medium tracking-[-0.03em] text-primary">Participant Consent</h1>
             <p className="text-[14px] leading-[1.55] text-secondary">
