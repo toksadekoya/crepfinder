@@ -12,7 +12,7 @@
   <path d="M330 709C385 661 455 633 528 633H780C832 633 881 652 918 687L954 719L912 754C873 787 822 806 770 806H525C470 806 418 787 379 752L330 709Z" fill="#B9C0C5"/>
   <path d="M536 651H615L661 694L615 738H536L489 694L536 651Z" fill="#6E7A83"/>
   <path d="M630 651H709L755 694L709 738H630L584 694L630 651Z" fill="#0C0A09"/>
-  <text x="90" y="160" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="30" font-weight="500" letter-spacing="8">NEW BALANCE</text>
-  <text x="90" y="246" fill="#0C0A09" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="104" font-weight="500" letter-spacing="-4">990v5</text>
-  <text x="90" y="1032" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="34" font-weight="500" letter-spacing="6">CLASSIC RUNNER</text>
+  <text x="90" y="160" fill="#57534E" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="30" font-weight="500" letter-spacing="8">NEW BALANCE</text>
+  <text x="90" y="246" fill="#0C0A09" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="104" font-weight="500" letter-spacing="-4">990v5</text>
+  <text x="90" y="1032" fill="#57534E" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="34" font-weight="500" letter-spacing="6">CLASSIC RUNNER</text>
 </svg>

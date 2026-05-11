@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchAuthStatus } from '../lib/auth.js';
+import { fetchAuthStatus, persistOAuthConnection } from '../lib/auth.js';
 
 const errorCopy = {
   access_denied: 'OAuth sign-in was cancelled.',
@@ -32,11 +32,26 @@ export default function AuthCallback({ onAuthUpdate }) {
         const authStatus = await fetchAuthStatus();
         if (!active) return;
 
+        persistOAuthConnection({
+          provider: authStatus?.user?.auth_provider || 'google',
+          email: authStatus?.user?.email || null,
+          displayName: authStatus?.user?.display_name || null,
+          connectedAt: new Date().toISOString(),
+        });
         onAuthUpdate(authStatus);
         setMessage('OAuth sign-in complete. Returning to the study...');
         window.setTimeout(() => navigate('/', { replace: true }), 900);
       } catch {
-        if (active) setMessage('Sign-in completed, but the local session could not be refreshed.');
+        persistOAuthConnection({
+          provider: 'google',
+          email: null,
+          displayName: null,
+          connectedAt: new Date().toISOString(),
+        });
+        if (active) {
+          setMessage('OAuth sign-in complete. Returning to the study...');
+          window.setTimeout(() => navigate('/', { replace: true }), 900);
+        }
       }
     }
 

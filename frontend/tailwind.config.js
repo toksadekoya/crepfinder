@@ -17,7 +17,7 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Satoshi', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['IBM Plex Sans', 'Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         card: '0 14px 32px rgba(12, 10, 9, 0.06)',

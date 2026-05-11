@@ -10,7 +10,7 @@
   <circle cx="952" cy="250" r="168" fill="#FFFFFF" fill-opacity="0.66"/>
   <path d="M254 742C334 646 453 591 578 591H772C841 591 905 616 954 661L1000 704L948 751C900 795 836 820 769 820H527C449 820 376 791 322 737L254 670V742Z" fill="#FCFBF9"/>
   <path d="M337 710C394 663 464 636 538 636H785C836 636 884 654 920 687L956 720L915 754C876 786 826 805 775 805H530C474 805 421 786 381 751L337 710Z" fill="#D9D2CA"/>
-  <text x="90" y="162" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="30" font-weight="500" letter-spacing="8">CREPFINDER</text>
-  <text x="90" y="258" fill="#0C0A09" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="108" font-weight="500" letter-spacing="-4">Sneaker Listing</text>
-  <text x="90" y="1032" fill="#57534E" font-family="Satoshi, Inter, system-ui, sans-serif" font-size="34" font-weight="500" letter-spacing="6">PLACEHOLDER ARTWORK</text>
+  <text x="90" y="162" fill="#57534E" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="30" font-weight="500" letter-spacing="8">CREPFINDER</text>
+  <text x="90" y="258" fill="#0C0A09" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="108" font-weight="500" letter-spacing="-4">Sneaker Listing</text>
+  <text x="90" y="1032" fill="#57534E" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="34" font-weight="500" letter-spacing="6">PLACEHOLDER ARTWORK</text>
 </svg>

@@ -1,6 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { beginGoogleOAuth, beginLinkedInOAuth, getInitials, logout } from '../lib/auth.js';
+import {
+  beginGoogleOAuth,
+  beginLinkedInOAuth,
+  clearOAuthConnection,
+  getInitials,
+  getStoredOAuthConnection,
+  logout,
+} from '../lib/auth.js';
 
 const navItems = [
   { label: 'Browse', href: '/' },
@@ -12,7 +19,11 @@ export default function Navbar({ authStatus, onAuthUpdate }) {
   const { pathname } = useLocation();
   const [signingOut, setSigningOut] = useState(false);
   const user = authStatus?.user;
-  const avatarLabel = user ? getInitials(user) : 'GU';
+  const storedConnection = getStoredOAuthConnection();
+  const connectedProvider = user?.auth_provider || storedConnection?.provider;
+  const connectedEmail = user?.email || storedConnection?.email;
+  const avatarLabel = user ? getInitials(user) : connectedProvider ? 'G' : 'GU';
+  const signedInLabel = connectedProvider === 'linkedin' ? 'LinkedIn connected' : 'Google connected';
   const providerButtons = [
     { label: 'Google', enabled: authStatus?.googleOAuthEnabled, onClick: beginGoogleOAuth },
     { label: 'LinkedIn', enabled: authStatus?.linkedinOAuthEnabled, onClick: beginLinkedInOAuth },
@@ -25,6 +36,7 @@ export default function Navbar({ authStatus, onAuthUpdate }) {
     setSigningOut(true);
     try {
       await logout();
+      clearOAuthConnection();
       onAuthUpdate?.({
         authenticated: false,
         googleOAuthEnabled: authStatus?.googleOAuthEnabled ?? false,
@@ -32,6 +44,7 @@ export default function Navbar({ authStatus, onAuthUpdate }) {
         user: null,
       });
     } finally {
+      if (!authStatus?.authenticated) clearOAuthConnection();
       setSigningOut(false);
     }
   };
@@ -79,15 +92,24 @@ export default function Navbar({ authStatus, onAuthUpdate }) {
           </nav>
 
           {showOAuthControl && (
-            user ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={signingOut}
-                className="hidden rounded-full border border-border-subtle px-3 py-1.5 text-[11px] font-medium text-secondary transition-colors hover:border-border-strong hover:text-primary disabled:cursor-not-allowed disabled:text-muted sm:inline-flex"
-              >
-                {signingOut ? 'Signing out...' : 'Sign out'}
-              </button>
+            connectedProvider ? (
+              <div className="hidden items-center gap-2 sm:flex">
+                <span
+                  className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-subtle px-3 py-1.5 text-[12px] font-medium text-primary"
+                  title={connectedEmail || signedInLabel}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
+                  {signedInLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={signingOut}
+                  className="rounded-full border border-border-subtle px-3 py-1.5 text-[12px] font-medium text-secondary transition-colors hover:border-border-strong hover:text-primary disabled:cursor-not-allowed disabled:text-muted"
+                >
+                  {signingOut ? 'Signing out...' : 'Sign out'}
+                </button>
+              </div>
             ) : (
               <div className="hidden items-center gap-2 sm:flex">
                 {providerButtons.map((provider) => (
@@ -96,7 +118,7 @@ export default function Navbar({ authStatus, onAuthUpdate }) {
                     type="button"
                     onClick={provider.onClick}
                     disabled={!provider.enabled}
-                    className="rounded-full border border-border-subtle px-3 py-1.5 text-[11px] font-medium text-secondary transition-colors hover:border-border-strong hover:text-primary disabled:cursor-not-allowed disabled:text-muted"
+                    className="rounded-full border border-border-subtle px-3 py-1.5 text-[12px] font-medium text-secondary transition-colors hover:border-border-strong hover:text-primary disabled:cursor-not-allowed disabled:text-muted"
                     title={provider.enabled ? `Continue with ${provider.label}` : `Set ${provider.label} OAuth env vars to enable sign-in`}
                   >
                     {provider.enabled ? provider.label : `${provider.label} off`}
@@ -108,8 +130,8 @@ export default function Navbar({ authStatus, onAuthUpdate }) {
 
           <div
             className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-subtle text-[11px] font-medium text-secondary"
-            title={user ? `Signed in as ${user.display_name || user.email}` : 'Guest user'}
-            aria-label={user ? `Signed in as ${user.display_name || user.email}` : 'Guest user'}
+            title={user ? `Signed in as ${user.display_name || user.email}` : connectedProvider ? signedInLabel : 'Guest user'}
+            aria-label={user ? `Signed in as ${user.display_name || user.email}` : connectedProvider ? signedInLabel : 'Guest user'}
           >
             {avatarLabel}
           </div>

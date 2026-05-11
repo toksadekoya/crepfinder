@@ -1,5 +1,7 @@
 import api, { apiBaseUrl } from './api.js';
 
+const OAUTH_CONNECTION_KEY = 'crepfinder_oauth_connection';
+
 export function getInitials(user) {
   const name = user?.display_name || user?.username || user?.email || 'Guest user';
   const parts = name
@@ -12,6 +14,23 @@ export function getInitials(user) {
   }
 
   return name.slice(0, 2).toUpperCase();
+}
+
+export function getStoredOAuthConnection() {
+  try {
+    const raw = localStorage.getItem(OAUTH_CONNECTION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function persistOAuthConnection(connection) {
+  localStorage.setItem(OAUTH_CONNECTION_KEY, JSON.stringify(connection));
+}
+
+export function clearOAuthConnection() {
+  localStorage.removeItem(OAUTH_CONNECTION_KEY);
 }
 
 export function beginOAuth(provider) {
@@ -33,4 +52,5 @@ export async function fetchAuthStatus() {
 
 export async function logout() {
   await api.post('/api/auth/logout');
+  clearOAuthConnection();
 }
