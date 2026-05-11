@@ -8,23 +8,19 @@ const session = {
 };
 
 describe('DebriefScreen', () => {
-  it('directs participants to both post-task surveys with their participant code', () => {
+  it('directs participants to the post-task survey with their participant code', () => {
     render(<DebriefScreen session={session} />);
 
-    expect(screen.getByRole('heading', { name: /complete the final surveys/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /complete the post-task survey/i })).toBeInTheDocument();
     expect(screen.getByText(/your participant code is:/i)).toBeInTheDocument();
     expect(screen.getAllByText('P123')).toHaveLength(2);
-    expect(screen.getByText(/please complete the surveys in order/i)).toBeInTheDocument();
+    expect(screen.getByText(/please complete the survey to finalise your participation/i)).toBeInTheDocument();
 
-    const usabilitySurvey = screen.getByRole('link', { name: /step 1: complete the usability survey/i });
-    const debriefSurvey = screen.getByRole('link', { name: /step 2: complete the short debrief survey/i });
+    const postTaskSurvey = screen.getByRole('link', { name: /complete the post-task survey/i });
 
-    expect(usabilitySurvey.getAttribute('href')).toContain('P123');
-    expect(debriefSurvey.getAttribute('href')).toContain('P123');
-    expect(usabilitySurvey).toHaveAttribute('target', '_blank');
-    expect(debriefSurvey).toHaveAttribute('target', '_blank');
-    expect(usabilitySurvey).toHaveAttribute('rel', 'noopener noreferrer');
-    expect(debriefSurvey).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(postTaskSurvey.getAttribute('href')).toContain('P123');
+    expect(postTaskSurvey).toHaveAttribute('target', '_blank');
+    expect(postTaskSurvey).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
   it('URL-encodes participant codes before inserting them into survey links', () => {

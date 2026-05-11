@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
-export const SUS_FORM_URL_TEMPLATE = 'https://docs.google.com/forms/d/e/1FAIpQLSezT8I2f5a8WTaMHmN5670StA5kyaDk7vQIs7lcCbZGGQKrvg/viewform?usp=pp_url&entry.48634103=PARTICIPANT_CODE_PLACEHOLDER';
-export const DEBRIEF_FORM_URL_TEMPLATE = 'https://docs.google.com/forms/d/e/1FAIpQLScl6_bZg-ffDPYJStTBP9HQis5v6vaqY2tWAW7CGeilIXtLuA/viewform?usp=pp_url&entry.2116702713=PARTICIPANT_CODE_PLACEHOLDER';
+export const POSTTASK_FORM_URL_TEMPLATE = 'https://docs.google.com/forms/d/e/1FAIpQLSfS7TEqzs5nE_pTvxjjwphYckA5ohFf_umDHNAhrrsE-s0Mxw/viewform?usp=pp_url&entry.705929541=PARTICIPANT_CODE_PLACEHOLDER';
 
 export function buildSurveyUrl(template, participantCode) {
   return template.replace('PARTICIPANT_CODE_PLACEHOLDER', encodeURIComponent(participantCode ?? ''));
@@ -10,8 +9,7 @@ export function buildSurveyUrl(template, participantCode) {
 export default function DebriefScreen({ session }) {
   const [copied, setCopied] = useState(false);
   const participantCode = session.participantCode;
-  const usabilitySurveyUrl = buildSurveyUrl(SUS_FORM_URL_TEMPLATE, participantCode);
-  const debriefSurveyUrl = buildSurveyUrl(DEBRIEF_FORM_URL_TEMPLATE, participantCode);
+  const postTaskSurveyUrl = buildSurveyUrl(POSTTASK_FORM_URL_TEMPLATE, participantCode);
 
   const copyCode = async () => {
     try {
@@ -52,42 +50,33 @@ export default function DebriefScreen({ session }) {
 
       <section className="space-y-4 rounded-[10px] border border-border-subtle bg-surface p-5">
         <div className="space-y-3 text-[14px] leading-[1.55] text-secondary">
-          <h2 className="text-[18px] font-medium tracking-[-0.02em] text-primary">Complete the final surveys</h2>
+          <h2 className="text-[18px] font-medium tracking-[-0.02em] text-primary">Complete the post-task survey</h2>
           <p>
             Thank you for completing the CrepFinder evaluation. Your participant code is:{' '}
             <span className="font-medium text-primary">{participantCode}</span>
           </p>
           <p>
-            To complete your participation, please use this code to fill in the two short surveys below
-            (approximately six minutes in total). Your responses will form part of the project's final evaluation
-            and analysis.
+            To complete your participation, please use this code to fill in the short post-task survey below
+            (approximately six minutes). Your responses will form part of the project's final evaluation and analysis.
           </p>
           <p className="font-medium text-primary">
-            Please complete the surveys in order. Both are required to finalise your participation.
+            Please complete the survey to finalise your participation.
           </p>
         </div>
 
         <div className="grid gap-3">
           <a
-            href={usabilitySurveyUrl}
+            href={postTaskSurveyUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-center text-[14px] font-medium text-surface transition-colors hover:bg-secondary"
           >
-            Step 1: Complete the usability survey
-          </a>
-          <a
-            href={debriefSurveyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-full border border-border-strong px-5 py-3 text-center text-[14px] font-medium text-primary transition-colors hover:bg-subtle"
-          >
-            Step 2: Complete the short debrief survey
+            Complete the post-task survey
           </a>
         </div>
 
         <p className="text-[12px] leading-[1.55] text-tertiary">
-          If a survey does not open automatically, copy your participant code above and paste it into the survey
+          If the survey does not open automatically, copy your participant code above and paste it into the survey
           when prompted.
         </p>
       </section>
