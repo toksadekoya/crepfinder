@@ -218,6 +218,12 @@ docs/architecture.md
 
 ## Deployment Outline
 
+Live prototype:
+
+```text
+https://frontend-pink-rho-83.vercel.app
+```
+
 1. Create a production PostgreSQL database.
 2. Deploy the backend and set the backend environment variables.
 3. Run `npm run db:init` and `npm run seed` against the production database.
