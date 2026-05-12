@@ -1,12 +1,8 @@
 import { Router } from 'express';
 import pool from '../database/db.js';
+import { normalizeParticipantCode } from '../lib/participantCodes.js';
 
 const router = Router();
-
-function normalizeParticipantCode(value) {
-  const code = String(value ?? '').trim().toUpperCase();
-  return /^P[0-9]{3}$/.test(code) ? code : null;
-}
 
 const socialVerificationSelect = `
   (

@@ -14,9 +14,7 @@ export default function ConsentScreen({ onConsent, authStatus, onAuthUpdate }) {
     { label: 'Google', enabled: authStatus?.googleOAuthEnabled, onClick: beginGoogleOAuth },
     { label: 'LinkedIn', enabled: authStatus?.linkedinOAuthEnabled, onClick: beginLinkedInOAuth },
   ];
-  const showOAuthPanel = import.meta.env.DEV && (
-    user || oauthProviders.some((provider) => provider.enabled)
-  );
+  const showOAuthPanel = user || oauthProviders.some((provider) => provider.enabled);
 
   const handleLogout = async () => {
     setSigningOut(true);
@@ -45,11 +43,20 @@ export default function ConsentScreen({ onConsent, authStatus, onAuthUpdate }) {
     setError('');
 
     try {
-      const { data } = await api.post('/api/study/consent', { consented: true });
+      const params = new URLSearchParams(window.location.search);
+      const requestedCode = params.get('participant_code');
+      const pilotRequested = params.get('pilot') === '1' || params.get('pilot') === 'true';
+      const payload = {
+        consented: true,
+        ...(pilotRequested ? { pilot: true } : {}),
+        ...(requestedCode ? { participant_code: requestedCode } : {}),
+      };
+      const { data } = await api.post('/api/study/consent', payload);
       const session = {
         participantCode: data.participant_code,
         condition: data.condition_name,
         consentedAt: data.consented_at,
+        isPilot: data.is_pilot,
       };
 
       persistStudySession(session);

@@ -1,16 +1,12 @@
 import { Router } from 'express';
 import pool from '../database/db.js';
+import { normalizeParticipantCode } from '../lib/participantCodes.js';
 
 const router = Router();
 
 function parseId(value) {
   const id = Number(value);
   return Number.isInteger(id) && id > 0 ? id : null;
-}
-
-function normalizeParticipantCode(value) {
-  const code = String(value ?? '').trim().toUpperCase();
-  return /^P[0-9]{3}$/.test(code) ? code : null;
 }
 
 function normalizeBody(value) {

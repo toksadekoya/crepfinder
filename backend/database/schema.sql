@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS trust_measurements (
   listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
   condition_name VARCHAR(10) NOT NULL CHECK (condition_name IN ('A', 'B')),
   participant_id VARCHAR(100),
+  is_pilot BOOLEAN NOT NULL DEFAULT FALSE,
   -- Competence subscale
   q1_competence_knowledgeable INTEGER NOT NULL CHECK (q1_competence_knowledgeable BETWEEN 1 AND 7),
   q2_competence_capable INTEGER NOT NULL CHECK (q2_competence_capable BETWEEN 1 AND 7),
@@ -106,7 +107,8 @@ CREATE TABLE IF NOT EXISTS trust_measurements (
 -- Participant study sessions
 CREATE TABLE IF NOT EXISTS participant_codes (
   id SERIAL PRIMARY KEY,
-  participant_code VARCHAR(4) UNIQUE NOT NULL CHECK (participant_code ~ '^P[0-9]{3}$'),
+  participant_code VARCHAR(16) UNIQUE NOT NULL CHECK (participant_code ~ '^(P[0-9]{3}|PILOT_[0-9]{3})$'),
+  is_pilot BOOLEAN NOT NULL DEFAULT FALSE,
   user_agent TEXT,
   consented_at TIMESTAMP DEFAULT NOW()
 );
@@ -117,7 +119,7 @@ CREATE TABLE IF NOT EXISTS participant_codes (
 CREATE TABLE IF NOT EXISTS mutual_connections (
   id SERIAL PRIMARY KEY,
   seller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  participant_code VARCHAR(4) REFERENCES participant_codes(participant_code) ON DELETE CASCADE,
+  participant_code VARCHAR(16) REFERENCES participant_codes(participant_code) ON DELETE CASCADE,
   connection_label VARCHAR(100) NOT NULL,
   connection_handle VARCHAR(100),
   relationship_context VARCHAR(120) NOT NULL DEFAULT 'previous_buyer',
@@ -132,7 +134,7 @@ CREATE INDEX IF NOT EXISTS idx_mutual_connections_participant_code
 
 CREATE TABLE IF NOT EXISTS condition_assignments (
   id SERIAL PRIMARY KEY,
-  participant_code VARCHAR(4) REFERENCES participant_codes(participant_code) ON DELETE CASCADE UNIQUE,
+  participant_code VARCHAR(16) REFERENCES participant_codes(participant_code) ON DELETE CASCADE UNIQUE,
   condition_name VARCHAR(10) NOT NULL CHECK (condition_name IN ('A', 'B')),
   assigned_at TIMESTAMP DEFAULT NOW()
 );
@@ -142,7 +144,7 @@ CREATE TABLE IF NOT EXISTS condition_assignments (
 CREATE TABLE IF NOT EXISTS purchase_requests (
   id SERIAL PRIMARY KEY,
   listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
-  participant_code VARCHAR(4) REFERENCES participant_codes(participant_code) ON DELETE CASCADE,
+  participant_code VARCHAR(16) REFERENCES participant_codes(participant_code) ON DELETE CASCADE,
   status VARCHAR(20) NOT NULL DEFAULT 'requested'
     CHECK (status IN ('requested', 'completed', 'cancelled')),
   created_at TIMESTAMP DEFAULT NOW(),
@@ -165,7 +167,7 @@ CREATE TABLE IF NOT EXISTS messages (
   id SERIAL PRIMARY KEY,
   listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
   seller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  participant_code VARCHAR(4) REFERENCES participant_codes(participant_code) ON DELETE SET NULL,
+  participant_code VARCHAR(16) REFERENCES participant_codes(participant_code) ON DELETE SET NULL,
   sender_role VARCHAR(20) NOT NULL CHECK (sender_role IN ('participant', 'seller', 'system')),
   body TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
@@ -176,6 +178,84 @@ CREATE INDEX IF NOT EXISTS idx_messages_participant_code
 
 CREATE INDEX IF NOT EXISTS idx_messages_listing_id
   ON messages(listing_id);
+
+DO $$
+BEGIN
+  ALTER TABLE mutual_connections
+    DROP CONSTRAINT IF EXISTS mutual_connections_participant_code_fkey;
+  ALTER TABLE condition_assignments
+    DROP CONSTRAINT IF EXISTS condition_assignments_participant_code_fkey;
+  ALTER TABLE purchase_requests
+    DROP CONSTRAINT IF EXISTS purchase_requests_participant_code_fkey;
+  ALTER TABLE messages
+    DROP CONSTRAINT IF EXISTS messages_participant_code_fkey;
+  ALTER TABLE participant_codes
+    DROP CONSTRAINT IF EXISTS participant_codes_participant_code_check;
+
+  ALTER TABLE participant_codes
+    ALTER COLUMN participant_code TYPE VARCHAR(16);
+  ALTER TABLE mutual_connections
+    ALTER COLUMN participant_code TYPE VARCHAR(16);
+  ALTER TABLE condition_assignments
+    ALTER COLUMN participant_code TYPE VARCHAR(16);
+  ALTER TABLE purchase_requests
+    ALTER COLUMN participant_code TYPE VARCHAR(16);
+  ALTER TABLE messages
+    ALTER COLUMN participant_code TYPE VARCHAR(16);
+
+  ALTER TABLE participant_codes
+    ADD COLUMN IF NOT EXISTS is_pilot BOOLEAN NOT NULL DEFAULT FALSE;
+  ALTER TABLE trust_measurements
+    ADD COLUMN IF NOT EXISTS is_pilot BOOLEAN NOT NULL DEFAULT FALSE;
+
+  UPDATE participant_codes
+  SET is_pilot = TRUE
+  WHERE participant_code ~ '^PILOT_[0-9]{3}$';
+
+  UPDATE participant_codes
+  SET is_pilot = FALSE
+  WHERE is_pilot IS NULL;
+
+  UPDATE trust_measurements
+  SET is_pilot = TRUE
+  WHERE participant_id ~ '^PILOT_[0-9]{3}$';
+
+  UPDATE trust_measurements
+  SET is_pilot = FALSE
+  WHERE is_pilot IS NULL;
+
+  ALTER TABLE participant_codes
+    ALTER COLUMN is_pilot SET DEFAULT FALSE,
+    ALTER COLUMN is_pilot SET NOT NULL;
+  ALTER TABLE trust_measurements
+    ALTER COLUMN is_pilot SET DEFAULT FALSE,
+    ALTER COLUMN is_pilot SET NOT NULL;
+
+  ALTER TABLE participant_codes
+    ADD CONSTRAINT participant_codes_participant_code_check
+    CHECK (participant_code ~ '^(P[0-9]{3}|PILOT_[0-9]{3})$');
+
+  ALTER TABLE mutual_connections
+    ADD CONSTRAINT mutual_connections_participant_code_fkey
+    FOREIGN KEY (participant_code)
+    REFERENCES participant_codes(participant_code)
+    ON DELETE CASCADE;
+  ALTER TABLE condition_assignments
+    ADD CONSTRAINT condition_assignments_participant_code_fkey
+    FOREIGN KEY (participant_code)
+    REFERENCES participant_codes(participant_code)
+    ON DELETE CASCADE;
+  ALTER TABLE purchase_requests
+    ADD CONSTRAINT purchase_requests_participant_code_fkey
+    FOREIGN KEY (participant_code)
+    REFERENCES participant_codes(participant_code)
+    ON DELETE CASCADE;
+  ALTER TABLE messages
+    ADD CONSTRAINT messages_participant_code_fkey
+    FOREIGN KEY (participant_code)
+    REFERENCES participant_codes(participant_code)
+    ON DELETE SET NULL;
+END $$;
 
 -- A/B testing: track which UI condition each user sees
 CREATE TABLE IF NOT EXISTS ab_conditions (

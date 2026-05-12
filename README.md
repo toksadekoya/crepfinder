@@ -172,7 +172,7 @@ Postgres: localhost:5432
 - Transaction-locked review eligibility
 - Random A/B condition assignment
 - McKnight trust questionnaire
-- Participant code generation in `P###` format
+- Participant code generation in `P###` format, with `PILOT_###` support for pilot runs
 - Debrief screen
 - CSV research export
 
@@ -182,7 +182,7 @@ Postgres: localhost:5432
 /api/research/export.csv?token=<RESEARCH_EXPORT_TOKEN>
 ```
 
-The export includes participant codes, condition assignments, consent timestamps, listing metadata and trust questionnaire responses.
+The export includes participant codes, pilot status, condition assignments, consent timestamps, listing metadata and trust questionnaire responses. Pilot rows are excluded by default; add `include_pilot=true` when pilot rows need to be inspected.
 
 ## Social Verification
 

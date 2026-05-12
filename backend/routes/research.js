@@ -26,10 +26,13 @@ function requireExportToken(req, res, next) {
 }
 
 router.get('/export.csv', requireExportToken, async (req, res) => {
+  const includePilot = req.query.include_pilot === 'true';
+
   try {
     const result = await pool.query(`
       SELECT
         pc.participant_code,
+        COALESCE(pc.is_pilot, tm.is_pilot, FALSE) AS is_pilot,
         ca.condition_name AS assigned_condition,
         pc.consented_at,
         ca.assigned_at,
@@ -52,11 +55,14 @@ router.get('/export.csv', requireExportToken, async (req, res) => {
         ON tm.participant_id = pc.participant_code
       LEFT JOIN listings l
         ON l.id = tm.listing_id
+      WHERE $1::boolean = TRUE
+        OR COALESCE(pc.is_pilot, tm.is_pilot, FALSE) = FALSE
       ORDER BY pc.consented_at ASC, tm.created_at ASC
-    `);
+    `, [includePilot]);
 
     const headers = [
       'participant_code',
+      'is_pilot',
       'assigned_condition',
       'consented_at',
       'assigned_at',
