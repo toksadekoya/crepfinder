@@ -152,6 +152,30 @@ describe('CrepFinder API contract', () => {
     );
   });
 
+  it('rejects review creation without a completed purchase request', async () => {
+    mockPool.query.mockResolvedValueOnce({ rows: [] });
+
+    const response = await request(app)
+      .post('/api/reviews')
+      .send({
+        listing_id: 1,
+        reviewer_id: 2,
+        participant_code: 'P123',
+        rating: 5,
+        comment: 'Looks reliable',
+      });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toContain('Reviews are locked until a completed purchase request exists');
+    expect(mockPool.query).toHaveBeenCalledWith(
+      expect.stringContaining('FROM purchase_requests'),
+      [1, 'P123']
+    );
+    expect(
+      mockPool.query.mock.calls.some(([query]) => String(query).includes('INSERT INTO reviews'))
+    ).toBe(false);
+  });
+
   it('validates social verification start requests before touching the database', async () => {
     const response = await request(app)
       .post('/api/social-verification/start')

@@ -19,6 +19,14 @@ coverage/
 *.db
 *.db-journal
 *.dump
+exports/
+
+# Local screenshot scratch outputs
+docs/screenshots/current-prototype/
+docs/screenshots/safari-framed/
+docs/screenshots/code-listings/html/
+docs/screenshots/code-listings/*.svg
+docs/screenshots/code-listings/test.svg.png
 
 # Logs
 *.log
@@ -32,8 +40,6 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Local tool settings
-.claude/settings.local.json
-**/.claude/settings.local.json
+# Local deployment settings
 .vercel/
 **/.vercel/
