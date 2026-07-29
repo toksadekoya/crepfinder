@@ -11,6 +11,7 @@ const linkedInScopes = ['openid', 'profile', 'email'];
 const { Strategy: OAuth2Strategy } = OAuth2;
 let passportSessionConfigured = false;
 const configuredStrategies = new Set();
+const sessionCookieName = 'crepfinder.sid';
 
 function hasGoogleOAuthConfig() {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
@@ -359,7 +360,11 @@ router.get('/me', async (req, res) => {
 
 router.post('/logout', (req, res) => {
   req.session.destroy(() => {
-    res.clearCookie('connect.sid');
+    res.clearCookie(sessionCookieName, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.COOKIE_SAME_SITE || 'lax',
+    });
     res.json({ message: 'Logged out' });
   });
 });

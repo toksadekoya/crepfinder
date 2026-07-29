@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import api from '../lib/api.js';
+import { Link, useLocation, useParams } from 'wouter';
+import api, { allowMockData } from '../lib/api.js';
 import { mockListings, mockReviews } from '../mockData.js';
+import PurchaseRequestModal from './PurchaseRequestModal.jsx';
 import TrustModal from './TrustModal.jsx';
 import SocialVerificationBadge from './SocialVerificationBadge.jsx';
 import {
@@ -31,12 +32,18 @@ function StarRating({ value }) {
   );
 }
 
-function MessageComposer({ listing, participant }) {
+function MessageComposer({ listing, participant, authStatus }) {
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState('');
   const [sending, setSending] = useState(false);
+  const canSend = Boolean(participant?.participantCode || authStatus?.authenticated);
 
   const handleSend = async () => {
+    if (!canSend) {
+      setStatus('Sign in before messaging this seller.');
+      return;
+    }
+
     const body = message.trim();
     if (!body) {
       setStatus('Write a short message before sending.');
@@ -55,13 +62,17 @@ function MessageComposer({ listing, participant }) {
     try {
       await api.post('/api/messages', payload);
       setMessage('');
-      setStatus('Message saved for the seller.');
+      setStatus('Message sent to the seller.');
     } catch {
-      const saved = JSON.parse(localStorage.getItem('crepfinder_messages') ?? '[]');
-      saved.push({ ...payload, created_at: new Date().toISOString(), sender_role: 'participant' });
-      localStorage.setItem('crepfinder_messages', JSON.stringify(saved));
-      setMessage('');
-      setStatus('Message saved locally for this prototype session.');
+      if (participant?.participantCode) {
+        const saved = JSON.parse(localStorage.getItem('crepfinder_messages') ?? '[]');
+        saved.push({ ...payload, created_at: new Date().toISOString(), sender_role: 'participant' });
+        localStorage.setItem('crepfinder_messages', JSON.stringify(saved));
+        setMessage('');
+        setStatus('Message saved locally for this study session.');
+      } else {
+        setStatus('Could not send the message. Please try again.');
+      }
     } finally {
       setSending(false);
     }
@@ -80,11 +91,13 @@ function MessageComposer({ listing, participant }) {
         className="mt-3 w-full resize-none rounded-[10px] border border-border-subtle bg-page px-3 py-2 text-[13px] leading-[1.55] text-primary outline-none transition-colors placeholder:text-muted focus:border-border-strong"
       />
       <div className="mt-3 flex items-center justify-between gap-3">
-        <p role="status" className="text-[11px] text-muted">{status || 'Prototype messaging is stored as a non-real-time thread.'}</p>
+        <p role="status" className="text-[11px] text-muted">
+          {status || (canSend ? 'Messages are stored in your CrepFinder inbox.' : 'Sign in to message this seller.')}
+        </p>
         <button
           type="button"
           onClick={handleSend}
-          disabled={sending}
+          disabled={sending || !canSend}
           className="shrink-0 rounded-full border border-border-strong px-4 py-2 text-[12px] font-medium text-primary transition-colors hover:bg-primary hover:text-surface disabled:cursor-not-allowed disabled:border-border-subtle disabled:text-muted"
         >
           {sending ? 'Sending...' : 'Send'}
@@ -263,16 +276,31 @@ function RatingsSellerPanel({ listing, reviews, onBuy }) {
   );
 }
 
-export default function ListingDetail({ condition, participant, onStudyComplete }) {
+export default function ListingDetail({
+  condition,
+  participant,
+  authStatus,
+  trustMode = 'social',
+  studyMode = false,
+  onStudyComplete,
+}) {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const [listing, setListing] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [usingDemoData, setUsingDemoData] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [purchaseRequest, setPurchaseRequest] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setLoadError('');
+      setUsingDemoData(false);
+
       try {
         const [listingRes, reviewsRes] = await Promise.all([
           api.get(`/api/listings/${id}`, {
@@ -283,29 +311,63 @@ export default function ListingDetail({ condition, participant, onStudyComplete 
         setListing(listingRes.data);
         setReviews(reviewsRes.data);
       } catch {
-        const found = mockListings.find(l => l.id === Number(id));
-        setListing(found ?? null);
-        setReviews(mockReviews[Number(id)] ?? []);
+        if (allowMockData) {
+          const found = mockListings.find(l => l.id === Number(id));
+          setListing(found ?? null);
+          setReviews(mockReviews[Number(id)] ?? []);
+          setUsingDemoData(true);
+          setLoadError('The API is unavailable, so local demo data is being shown.');
+        } else {
+          setListing(null);
+          setReviews([]);
+          setLoadError('CrepFinder could not load this listing. Please try again.');
+        }
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [id, participant?.participantCode]);
+  }, [id, participant?.participantCode, reloadKey]);
 
   if (loading) return <div className="flex justify-center py-20 text-muted">Loading…</div>;
+  if (loadError && !usingDemoData) return (
+    <div role="alert" className="rounded-[10px] border border-border-subtle bg-surface px-6 py-16 text-center">
+      <p className="text-[14px] text-secondary">{loadError}</p>
+      <button
+        type="button"
+        onClick={() => setReloadKey((value) => value + 1)}
+        className="mt-4 rounded-full bg-primary px-5 py-2 text-[13px] font-medium text-surface"
+      >
+        Try again
+      </button>
+      <Link href="/" className="ml-4 inline-flex text-[13px] font-medium text-secondary hover:text-primary">
+        Back to browse
+      </Link>
+    </div>
+  );
   if (!listing) return (
     <div className="rounded-[10px] border border-border-subtle bg-surface px-6 py-16 text-center">
       <p className="text-[14px] text-secondary">Listing not found.</p>
-      <Link to="/" className="mt-4 inline-flex text-[14px] font-medium text-secondary hover:text-primary">Back to browse</Link>
+      <Link href="/" className="mt-4 inline-flex text-[14px] font-medium text-secondary hover:text-primary">Back to browse</Link>
     </div>
   );
 
   return (
     <div className="space-y-6">
+      {usingDemoData && (
+        <div role="status" className="border-l-2 border-amber-500 bg-amber-50 px-4 py-3 text-[12px] text-stone-700">
+          {loadError}
+        </div>
+      )}
       <button
         type="button"
-        onClick={() => navigate(-1)}
+        onClick={() => {
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            navigate('/');
+          }
+        }}
         className="inline-flex text-[13px] font-medium text-secondary transition-colors hover:text-primary"
       >
         Back to browse
@@ -343,24 +405,40 @@ export default function ListingDetail({ condition, participant, onStudyComplete 
 
         <div className="space-y-4">
           <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.12em] text-tertiary">Seller</p>
-          {condition === 'A' ? (
+          {trustMode === 'social' ? (
             <SocialSellerPanel listing={listing} onBuy={() => setShowModal(true)} />
           ) : (
             <RatingsSellerPanel listing={listing} reviews={reviews} onBuy={() => setShowModal(true)} />
           )}
-          <MessageComposer listing={listing} participant={participant} />
+          <MessageComposer listing={listing} participant={participant} authStatus={authStatus} />
+          {purchaseRequest && (
+            <div className="rounded-[10px] border border-border-subtle bg-surface px-4 py-3 text-[13px] leading-[1.55] text-secondary">
+              Purchase request #{purchaseRequest.id} sent. The seller can follow up using your contact details.
+            </div>
+          )}
         </div>
       </div>
 
-      {showModal && (
+      {showModal && studyMode && (
         <TrustModal
           listing={listing}
           condition={condition}
           participant={participant}
           onComplete={() => {
             setShowModal(false);
-            onStudyComplete(listing);
+            onStudyComplete?.(listing);
             navigate('/debrief', { replace: true });
+          }}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+      {showModal && !studyMode && (
+        <PurchaseRequestModal
+          listing={listing}
+          authStatus={authStatus}
+          onComplete={(request) => {
+            setPurchaseRequest(request);
+            setShowModal(false);
           }}
           onClose={() => setShowModal(false)}
         />

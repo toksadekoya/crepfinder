@@ -1,6 +1,12 @@
 import bcrypt from 'bcrypt';
 import pool from './db.js';
 
+if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PRODUCTION_SEED !== 'true') {
+  console.error('Production seeding is disabled. Set ALLOW_PRODUCTION_SEED=true only for a new disposable demo database.');
+  await pool.end();
+  process.exit(1);
+}
+
 const seed = async () => {
   const client = await pool.connect();
   try {
@@ -116,6 +122,7 @@ const seed = async () => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Seed failed:', err);
+    process.exitCode = 1;
   } finally {
     client.release();
     await pool.end();

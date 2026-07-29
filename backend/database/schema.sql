@@ -46,8 +46,18 @@ CREATE TABLE IF NOT EXISTS listings (
   price DECIMAL(10,2) NOT NULL,
   description TEXT,
   image_url TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'active'
+    CHECK (status IN ('active', 'sold', 'hidden', 'removed')),
+  updated_at TIMESTAMP DEFAULT NOW(),
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+ALTER TABLE listings
+  ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active',
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+
+CREATE INDEX IF NOT EXISTS idx_listings_status
+  ON listings(status);
 
 CREATE TABLE IF NOT EXISTS reviews (
   id SERIAL PRIMARY KEY,
@@ -144,19 +154,57 @@ CREATE TABLE IF NOT EXISTS condition_assignments (
 CREATE TABLE IF NOT EXISTS purchase_requests (
   id SERIAL PRIMARY KEY,
   listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
+  buyer_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   participant_code VARCHAR(16) REFERENCES participant_codes(participant_code) ON DELETE CASCADE,
+  buyer_name VARCHAR(120),
+  buyer_email VARCHAR(160),
+  buyer_note TEXT,
   status VARCHAR(20) NOT NULL DEFAULT 'requested'
-    CHECK (status IN ('requested', 'completed', 'cancelled')),
+    CHECK (status IN ('requested', 'accepted', 'awaiting_payment', 'paid', 'shipped', 'completed', 'cancelled', 'disputed')),
+  payment_status VARCHAR(30) NOT NULL DEFAULT 'not_started'
+    CHECK (payment_status IN ('not_started', 'requires_payment_method', 'requires_confirmation', 'processing', 'paid', 'refunded', 'failed')),
+  stripe_payment_intent_id VARCHAR(255),
+  updated_at TIMESTAMP DEFAULT NOW(),
   created_at TIMESTAMP DEFAULT NOW(),
   completed_at TIMESTAMP,
   UNIQUE (listing_id, participant_code)
 );
+
+ALTER TABLE purchase_requests
+  ADD COLUMN IF NOT EXISTS buyer_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS buyer_name VARCHAR(120),
+  ADD COLUMN IF NOT EXISTS buyer_email VARCHAR(160),
+  ADD COLUMN IF NOT EXISTS buyer_note TEXT,
+  ADD COLUMN IF NOT EXISTS payment_status VARCHAR(30) NOT NULL DEFAULT 'not_started',
+  ADD COLUMN IF NOT EXISTS stripe_payment_intent_id VARCHAR(255),
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+
+ALTER TABLE purchase_requests
+  DROP CONSTRAINT IF EXISTS purchase_requests_status_check,
+  ADD CONSTRAINT purchase_requests_status_check
+    CHECK (status IN ('requested', 'accepted', 'awaiting_payment', 'paid', 'shipped', 'completed', 'cancelled', 'disputed'));
+
+ALTER TABLE purchase_requests
+  DROP CONSTRAINT IF EXISTS purchase_requests_payment_status_check,
+  ADD CONSTRAINT purchase_requests_payment_status_check
+    CHECK (payment_status IN ('not_started', 'requires_payment_method', 'requires_confirmation', 'processing', 'paid', 'refunded', 'failed'));
 
 CREATE INDEX IF NOT EXISTS idx_purchase_requests_participant_code
   ON purchase_requests(participant_code);
 
 CREATE INDEX IF NOT EXISTS idx_purchase_requests_listing_id
   ON purchase_requests(listing_id);
+
+CREATE INDEX IF NOT EXISTS idx_purchase_requests_buyer_id
+  ON purchase_requests(buyer_id);
+
+CREATE INDEX IF NOT EXISTS idx_purchase_requests_status
+  ON purchase_requests(status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_purchase_requests_open_buyer_listing
+  ON purchase_requests(listing_id, buyer_id)
+  WHERE buyer_id IS NOT NULL
+    AND status NOT IN ('completed', 'cancelled');
 
 ALTER TABLE reviews
   ADD COLUMN IF NOT EXISTS purchase_request_id INTEGER REFERENCES purchase_requests(id) ON DELETE SET NULL,
@@ -167,17 +215,26 @@ CREATE TABLE IF NOT EXISTS messages (
   id SERIAL PRIMARY KEY,
   listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
   seller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  buyer_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  buyer_email VARCHAR(160),
   participant_code VARCHAR(16) REFERENCES participant_codes(participant_code) ON DELETE SET NULL,
   sender_role VARCHAR(20) NOT NULL CHECK (sender_role IN ('participant', 'seller', 'system')),
   body TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+ALTER TABLE messages
+  ADD COLUMN IF NOT EXISTS buyer_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS buyer_email VARCHAR(160);
+
 CREATE INDEX IF NOT EXISTS idx_messages_participant_code
   ON messages(participant_code);
 
 CREATE INDEX IF NOT EXISTS idx_messages_listing_id
   ON messages(listing_id);
+
+CREATE INDEX IF NOT EXISTS idx_messages_buyer_id
+  ON messages(buyer_id);
 
 DO $$
 BEGIN
@@ -264,3 +321,13 @@ CREATE TABLE IF NOT EXISTS ab_conditions (
   condition_name VARCHAR(50) NOT NULL CHECK (condition_name IN ('A', 'B')),
   assigned_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Persistent express-session storage for production deployments.
+CREATE TABLE IF NOT EXISTS user_sessions (
+  sid VARCHAR NOT NULL PRIMARY KEY,
+  sess JSON NOT NULL,
+  expire TIMESTAMP(6) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_sessions_expire
+  ON user_sessions(expire);
