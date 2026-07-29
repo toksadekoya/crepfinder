@@ -34,6 +34,16 @@ describe('CrepFinder API contract', () => {
     expect(response.body).toEqual({ status: 'ok' });
   });
 
+  it('checks database connectivity before reporting readiness', async () => {
+    mockPool.query.mockResolvedValueOnce({ rows: [{ '?column?': 1 }] });
+
+    const response = await request(app).get('/api/ready');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ status: 'ready', database: 'ok' });
+    expect(mockPool.query).toHaveBeenCalledWith('SELECT 1');
+  });
+
   it('reports available OAuth providers without starting a login flow', async () => {
     process.env.GOOGLE_CLIENT_ID = 'google-client';
     process.env.GOOGLE_CLIENT_SECRET = 'google-secret';
@@ -184,6 +194,47 @@ describe('CrepFinder API contract', () => {
     expect(response.status).toBe(400);
     expect(response.body.error).toContain('profile_url or username');
     expect(mockPool.connect).not.toHaveBeenCalled();
+  });
+
+  it('does not accept a client-supplied user id for seller verification', async () => {
+    const response = await request(app)
+      .post('/api/social-verification/start')
+      .send({
+        user_id: 1,
+        platform: 'Instagram',
+        username: 'sneakerhead1',
+      });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toContain('Sign in');
+    expect(mockPool.connect).not.toHaveBeenCalled();
+  });
+
+  it('requires a signed-in account for product purchase requests', async () => {
+    const response = await request(app)
+      .post('/api/purchase-requests')
+      .send({
+        listing_id: 1,
+        buyer_email: 'buyer@example.com',
+      });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toContain('Sign in');
+    expect(mockPool.query).not.toHaveBeenCalled();
+  });
+
+  it('does not accept a client-supplied reviewer identity outside a study request', async () => {
+    const response = await request(app)
+      .post('/api/reviews')
+      .send({
+        listing_id: 1,
+        reviewer_id: 2,
+        rating: 5,
+      });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toContain('Sign in');
+    expect(mockPool.query).not.toHaveBeenCalled();
   });
 
   it('passes participant codes into listing queries for mutual connection lookup', async () => {

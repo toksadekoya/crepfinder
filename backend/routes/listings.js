@@ -3,6 +3,20 @@ import pool from '../database/db.js';
 import { normalizeParticipantCode } from '../lib/participantCodes.js';
 
 const router = Router();
+const allowedConditions = new Set(['New', 'Like New', 'Good', 'Fair', 'Poor']);
+
+function normalizeText(value, limit) {
+  const text = String(value ?? '').trim();
+  return text ? text.slice(0, limit) : null;
+}
+
+function parseNumber(value, { min, max } = {}) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+  if (min != null && number < min) return null;
+  if (max != null && number > max) return null;
+  return number;
+}
 
 const socialVerificationSelect = `
   (
@@ -75,12 +89,73 @@ router.get('/', async (req, res) => {
         ${mutualConnectionsSelect('$1')}
       FROM listings l
       JOIN users u ON l.user_id = u.id
+      WHERE l.status = 'active'
       ORDER BY l.created_at DESC
     `, [participantCode]);
     res.json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch listings' });
+  }
+});
+
+router.get('/mine', async (req, res) => {
+  const userId = req.session?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Sign in to view seller listings' });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT l.*
+       FROM listings l
+       WHERE l.user_id = $1
+       ORDER BY l.created_at DESC`,
+      [userId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch seller listings' });
+  }
+});
+
+router.post('/', async (req, res) => {
+  const userId = req.session?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Sign in before creating listings' });
+  }
+
+  const brand = normalizeText(req.body?.brand, 100);
+  const model = normalizeText(req.body?.model, 150);
+  const size = parseNumber(req.body?.size, { min: 1, max: 16 });
+  const condition = normalizeText(req.body?.condition, 50);
+  const price = parseNumber(req.body?.price, { min: 1, max: 10000 });
+  const description = normalizeText(req.body?.description, 2000);
+  const imageUrl = normalizeText(req.body?.image_url, 1000);
+
+  if (!brand || !model || !size || !condition || !allowedConditions.has(condition) || !price) {
+    return res.status(400).json({
+      error: 'brand, model, size, condition, and price are required',
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO listings
+        (user_id, brand, model, size, condition, price, description, image_url, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active')
+       RETURNING id, user_id, brand, model, size, condition, price, description, image_url, status, created_at`,
+      [userId, brand, model, size, condition, price, description, imageUrl]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create listing' });
   }
 });
 
@@ -109,6 +184,7 @@ router.get('/:id', async (req, res) => {
       FROM listings l
       JOIN users u ON l.user_id = u.id
       WHERE l.id = $2
+        AND l.status = 'active'
     `, [participantCode, id]);
 
     if (listingResult.rows.length === 0) {

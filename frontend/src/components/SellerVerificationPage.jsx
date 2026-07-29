@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react';
 import api from '../lib/api.js';
+import { beginGoogleOAuth, beginLinkedInOAuth } from '../lib/auth.js';
 import SocialVerificationBadge from './SocialVerificationBadge.jsx';
-
-const sellerOptions = [
-  { id: 1, label: '@sneakerhead1' },
-  { id: 2, label: '@kickseller' },
-  { id: 3, label: '@airmax_fan' },
-];
 
 const platformOptions = ['Instagram', 'TikTok', 'X', 'YouTube', 'Depop', 'Other'];
 
-export default function SellerVerificationPage() {
-  const [sellerId, setSellerId] = useState(1);
+export default function SellerVerificationPage({ authStatus }) {
   const [platform, setPlatform] = useState('Instagram');
   const [profileUrl, setProfileUrl] = useState('');
   const [username, setUsername] = useState('');
@@ -22,15 +16,16 @@ export default function SellerVerificationPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const user = authStatus?.user;
 
-  const fetchRequests = async (id = sellerId) => {
+  const fetchRequests = async () => {
+    if (!user?.id) return;
+
     setLoading(true);
     setError('');
 
     try {
-      const { data } = await api.get('/api/social-verification/me', {
-        params: { user_id: id },
-      });
+      const { data } = await api.get('/api/social-verification/me');
       setRequests(data);
       setActiveRequest(data[0] ?? null);
     } catch {
@@ -43,8 +38,8 @@ export default function SellerVerificationPage() {
   };
 
   useEffect(() => {
-    fetchRequests(sellerId);
-  }, [sellerId]);
+    fetchRequests();
+  }, [user?.id]);
 
   const startVerification = async () => {
     setMessage('');
@@ -52,7 +47,6 @@ export default function SellerVerificationPage() {
 
     try {
       const { data } = await api.post('/api/social-verification/start', {
-        user_id: sellerId,
         platform,
         profile_url: profileUrl,
         username,
@@ -78,7 +72,6 @@ export default function SellerVerificationPage() {
     try {
       const { data } = await api.post('/api/social-verification/submit', {
         id: activeRequest.id,
-        user_id: sellerId,
         evidence_url: evidenceUrl,
         evidence_text: evidenceText,
       });
@@ -90,6 +83,41 @@ export default function SellerVerificationPage() {
       setError(err.response?.data?.error ?? 'Could not submit evidence.');
     }
   };
+
+  if (!authStatus?.authenticated) {
+    return (
+      <div className="mx-auto max-w-[720px] space-y-6 py-8">
+        <div className="space-y-3">
+          <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-tertiary">Seller verification</p>
+          <h1 className="text-[28px] font-medium tracking-[-0.03em] text-primary">Verify a seller profile</h1>
+          <p className="max-w-[620px] text-[14px] leading-[1.55] text-secondary">
+            Sign in to connect a social profile to your seller account.
+          </p>
+        </div>
+
+        <div className="rounded-[10px] border border-border-subtle bg-surface p-5">
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={beginGoogleOAuth}
+              disabled={!authStatus?.googleOAuthEnabled}
+              className="rounded-full bg-primary px-5 py-2.5 text-[14px] font-medium text-surface transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:bg-stone-400"
+            >
+              Continue with Google
+            </button>
+            <button
+              type="button"
+              onClick={beginLinkedInOAuth}
+              disabled={!authStatus?.linkedinOAuthEnabled}
+              className="rounded-full border border-border-strong px-5 py-2.5 text-[14px] font-medium text-primary transition-colors hover:bg-subtle disabled:cursor-not-allowed disabled:border-border-subtle disabled:text-muted"
+            >
+              Continue with LinkedIn
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[880px] space-y-8 py-4 md:py-8">
@@ -106,18 +134,10 @@ export default function SellerVerificationPage() {
         <section className="space-y-4 rounded-[10px] border border-border-subtle bg-surface p-5">
           <h2 className="text-[18px] font-medium tracking-[-0.02em] text-primary">Start verification</h2>
 
-          <label className="block space-y-2">
-            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-tertiary">Seller</span>
-            <select
-              value={sellerId}
-              onChange={(event) => setSellerId(Number(event.target.value))}
-              className="w-full rounded-[10px] border border-border-subtle bg-page px-3 py-2 text-[14px] text-primary"
-            >
-              {sellerOptions.map((seller) => (
-                <option key={seller.id} value={seller.id}>{seller.label}</option>
-              ))}
-            </select>
-          </label>
+          <div className="rounded-[10px] border border-border-subtle bg-page px-3 py-3">
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-tertiary">Seller</p>
+            <p className="mt-1 text-[14px] font-medium text-primary">@{user.username}</p>
+          </div>
 
           <label className="block space-y-2">
             <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-tertiary">Platform</span>

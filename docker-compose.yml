@@ -16,13 +16,31 @@ services:
       timeout: 5s
       retries: 10
 
+  database-prepare:
+    build:
+      context: ./backend
+    container_name: crepfinder-database-prepare
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: crepfinder
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_SSL: "false"
+    command: npm run db:prepare
+    restart: "no"
+
   backend:
     build:
       context: ./backend
     container_name: crepfinder-backend
     depends_on:
-      postgres:
-        condition: service_healthy
+      database-prepare:
+        condition: service_completed_successfully
     environment:
       NODE_ENV: development
       PORT: 3001
@@ -33,8 +51,12 @@ services:
       DB_PASSWORD: postgres
       DB_SSL: "false"
       SESSION_SECRET: local-docker-session-secret-change-me
+      SESSION_STORE: postgres
+      COOKIE_SAME_SITE: lax
       FRONTEND_ORIGIN: http://localhost:5173
+      FRONTEND_URL: http://localhost:5173
       BACKEND_PUBLIC_URL: http://localhost:3001
+      SERVE_FRONTEND: "false"
       RESEARCH_EXPORT_TOKEN: local-export-token
       SOCIAL_VERIFICATION_ADMIN_TOKEN: local-admin-token
     ports:

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import pool from '../database/db.js';
 import { normalizeParticipantCode } from '../lib/participantCodes.js';
+import { isResearchModeEnabled } from '../lib/runtime.js';
 
 const router = Router();
 
@@ -33,27 +34,45 @@ router.get('/:listingId', async (req, res) => {
 // POST /api/reviews
 router.post('/', async (req, res) => {
   const listingId = parseId(req.body?.listing_id);
-  const reviewerId = parseId(req.body?.reviewer_id ?? req.session.userId);
   const participantCode = normalizeParticipantCode(req.body?.participant_code);
+  const buyerId = parseId(req.session?.userId);
+  const researchReview = Boolean(participantCode && isResearchModeEnabled());
+  const reviewerId = researchReview
+    ? parseId(req.body?.reviewer_id ?? buyerId)
+    : buyerId;
   const rating = Number(req.body?.rating);
   const comment = String(req.body?.comment ?? '').trim().slice(0, 1000);
 
-  if (!listingId || !reviewerId || !participantCode || !Number.isInteger(rating) || rating < 1 || rating > 5) {
+  if (!buyerId && !researchReview) {
+    return res.status(401).json({ error: 'Sign in before reviewing a completed purchase' });
+  }
+
+  if (!listingId || !reviewerId || (!researchReview && !buyerId) || !Number.isInteger(rating) || rating < 1 || rating > 5) {
     return res.status(400).json({
-      error: 'listing_id, reviewer_id, participant_code, and rating from 1 to 5 are required',
+      error: 'listing_id, reviewer identity, completed purchase context, and rating from 1 to 5 are required',
     });
   }
 
   try {
-    const purchase = await pool.query(
-      `SELECT id
-       FROM purchase_requests
-       WHERE listing_id = $1
-         AND participant_code = $2
-         AND status = 'completed'
-       LIMIT 1`,
-      [listingId, participantCode]
-    );
+    const purchase = researchReview
+      ? await pool.query(
+        `SELECT id
+         FROM purchase_requests
+         WHERE listing_id = $1
+           AND participant_code = $2
+           AND status = 'completed'
+         LIMIT 1`,
+        [listingId, participantCode]
+      )
+      : await pool.query(
+        `SELECT id
+         FROM purchase_requests
+         WHERE listing_id = $1
+           AND buyer_id = $2
+           AND status = 'completed'
+         LIMIT 1`,
+        [listingId, buyerId]
+      );
 
     if (purchase.rows.length === 0) {
       return res.status(403).json({

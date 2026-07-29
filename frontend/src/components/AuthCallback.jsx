@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation } from 'wouter';
 import { fetchAuthStatus, persistOAuthConnection } from '../lib/auth.js';
 
 const errorCopy = {
@@ -13,8 +13,8 @@ const errorCopy = {
 };
 
 export default function AuthCallback({ onAuthUpdate }) {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(window.location.search);
+  const [, navigate] = useLocation();
   const [message, setMessage] = useState('Completing OAuth sign-in...');
   const status = searchParams.get('oauth');
   const reason = searchParams.get('reason');
@@ -73,7 +73,7 @@ export default function AuthCallback({ onAuthUpdate }) {
           <h1 className="text-[26px] font-medium tracking-[-0.03em] text-primary">OAuth Sign-In</h1>
           <p className="mt-3 text-[14px] leading-[1.55] text-secondary">{message}</p>
           {status !== 'success' && (
-            <Link to="/" className="mt-6 inline-flex rounded-full bg-primary px-5 py-2.5 text-[13px] font-medium text-surface">
+            <Link href="/" className="mt-6 inline-flex rounded-full bg-primary px-5 py-2.5 text-[13px] font-medium text-surface">
               Return to study
             </Link>
           )}

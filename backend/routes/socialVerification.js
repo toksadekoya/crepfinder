@@ -83,15 +83,19 @@ async function createChallenge(client) {
 }
 
 router.post('/start', async (req, res) => {
-  const userId = parseId(req.body?.user_id ?? req.body?.seller_id);
+  const userId = parseId(req.session?.userId);
   const platform = normalizePlatform(req.body?.platform);
   const profileUrl = normalizeOptionalText(req.body?.profile_url, 1000);
   const username = normalizeOptionalText(req.body?.username, 100);
 
-  if (!userId || !platform || (!profileUrl && !username)) {
+  if (!platform || (!profileUrl && !username)) {
     return res.status(400).json({
-      error: 'user_id, platform, and either profile_url or username are required',
+      error: 'platform and either profile_url or username are required',
     });
+  }
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Sign in before starting seller verification' });
   }
 
   const client = await pool.connect();
@@ -126,14 +130,18 @@ router.post('/start', async (req, res) => {
 
 router.post('/submit', async (req, res) => {
   const id = parseId(req.body?.id ?? req.body?.verification_id);
-  const userId = parseId(req.body?.user_id ?? req.body?.seller_id);
+  const userId = parseId(req.session?.userId);
   const evidenceUrl = normalizeOptionalText(req.body?.evidence_url, 1000);
   const evidenceText = normalizeOptionalText(req.body?.evidence_text, 1000);
 
-  if (!id || !userId || (!evidenceUrl && !evidenceText)) {
+  if (!id || (!evidenceUrl && !evidenceText)) {
     return res.status(400).json({
-      error: 'verification id, user_id, and evidence_url or evidence_text are required',
+      error: 'verification id and evidence_url or evidence_text are required',
     });
+  }
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Sign in before submitting verification evidence' });
   }
 
   try {
@@ -163,10 +171,10 @@ router.post('/submit', async (req, res) => {
 });
 
 router.get('/me', async (req, res) => {
-  const userId = parseId(req.query.user_id ?? req.query.seller_id);
+  const userId = parseId(req.session?.userId);
 
   if (!userId) {
-    return res.status(400).json({ error: 'user_id query parameter is required' });
+    return res.status(401).json({ error: 'Sign in to view seller verification requests' });
   }
 
   try {

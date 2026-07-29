@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'wouter';
 import {
   formatPrice,
   formatRating,
@@ -12,7 +12,7 @@ import {
   getSellerAccountAge,
 } from '../lib/listingPresentation.js';
 
-function TrustSlot({ condition, listing }) {
+function TrustSlot({ condition, trustMode, listing }) {
   const social = getListingSocialData(listing);
   const verification = getListingSocialVerification(listing);
   const verificationLabel = getSocialVerificationLabel(verification);
@@ -20,7 +20,7 @@ function TrustSlot({ condition, listing }) {
   const reviewCount = getListingReviewCount(listing);
   const rating = getListingAverageRating(listing);
 
-  if (condition === 'A') {
+  if (trustMode === 'social') {
     return (
       <div className="flex min-h-[42px] flex-col gap-1">
         <div className="flex items-center justify-between gap-3">
@@ -60,7 +60,7 @@ function SellerHandle({ handle }) {
   );
 }
 
-export default function ListingCard({ listing, condition }) {
+export default function ListingCard({ listing, condition, trustMode = 'social' }) {
   const {
     id,
     brand,
@@ -73,7 +73,7 @@ export default function ListingCard({ listing, condition }) {
 
   return (
     <Link
-      to={`/listing/${id}`}
+      href={`/listing/${id}`}
       aria-label={`View ${brand} ${model}, ${formatPrice(price)}, ${formatUkSize(size)}, sold by @${seller_username}`}
       className="group flex flex-col overflow-hidden rounded-[10px] border border-border-subtle bg-surface transition-shadow hover:shadow-card"
     >
@@ -105,6 +105,7 @@ export default function ListingCard({ listing, condition }) {
         <div className="p-3">
           <TrustSlot
             condition={condition}
+            trustMode={trustMode}
             listing={{ ...listing, seller_username }}
           />
         </div>

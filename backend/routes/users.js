@@ -27,7 +27,14 @@ router.post('/login', async (req, res) => {
 
 // POST /api/users/logout
 router.post('/logout', (req, res) => {
-  req.session.destroy(() => res.json({ message: 'Logged out' }));
+  req.session.destroy(() => {
+    res.clearCookie('crepfinder.sid', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.COOKIE_SAME_SITE || 'lax',
+    });
+    res.json({ message: 'Logged out' });
+  });
 });
 
 // GET /api/users/me
