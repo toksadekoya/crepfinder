@@ -6,7 +6,11 @@ Productionised CrepFinder, a full-stack sneaker marketplace built with React, Ex
 
 ## CV Bullet After Deployment
 
-Built and deployed CrepFinder, a full-stack React, Express, and PostgreSQL sneaker marketplace with OAuth authentication, moderated seller verification, transaction-gated reviews, role-aware order workflows, persistent sessions, Docker-based delivery, and automated GitHub Actions CI.
+Built and deployed CrepFinder, a full-stack React, Express, and PostgreSQL
+sneaker marketplace on Google Cloud Run, with OAuth authentication, moderated
+seller verification, transaction-gated reviews, role-aware order workflows,
+PostgreSQL-backed sessions, Docker delivery, keyless GitHub Actions CI/CD, and
+automated schema migrations.
 
 Add a verified study metric only if it matches the submitted dissertation and underlying analysis. A safe extension is:
 
@@ -21,7 +25,9 @@ CrepFinder began as an A/B research prototype comparing social trust cues with c
 - **Architecture choice:** one production origin avoids depending on third-party cookies for OAuth sessions.
 - **Security boundary:** request-body user IDs are ignored for production actions; identity comes from the server-side session.
 - **Data integrity:** reviews require a completed purchase record and order transitions depend on actor role.
-- **Operational readiness:** configuration fails fast, database readiness is separate from liveness, and Railway runs schema preparation before traffic switches.
+- **Operational readiness:** configuration fails fast, database readiness is
+  separate from liveness, and a Cloud Run job prepares the schema before the
+  immutable application image is deployed.
 - **Research reproducibility:** consent, balanced random assignment, measurement, debrief, and export remain available behind explicit flags.
 - **Honest scope:** payments and authenticity operations are documented as future systems rather than implied by a purchase-request button.
 
@@ -29,7 +35,7 @@ CrepFinder began as an A/B research prototype comparing social trust cues with c
 
 - [ ] Standalone GitHub repository named `crepfinder`
 - [ ] Green CI run on `main`
-- [ ] Railway production URL
+- [ ] Cloud Run production URL
 - [ ] Neon backups/restore settings reviewed
 - [ ] Google or LinkedIn OAuth callback verified
 - [ ] Three to five polished listings
