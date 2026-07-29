@@ -34,7 +34,7 @@ This board records the iterative implementation work for the CrepFinder prototyp
 
 | ID | Task | Priority | Status | Notes |
 | --- | --- | --- | --- | --- |
-| CF-014 | Add production database and deployment URLs | High | Backlog | Requires Neon/Railway/Vercel setup and environment variables |
+| CF-014 | Add production database and deployment URLs | High | In progress | Neon London is provisioned; Cloud Run deployment and OAuth callbacks remain |
 | CF-015 | Capture screenshots of Condition A and Condition B for Chapter 4 | Medium | Backlog | Requires local or deployed prototype running |
 | CF-016 | Pilot study with a small number of users | High | Backlog | Requires final ethics wording and stable deployed URL |
 

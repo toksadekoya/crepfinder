@@ -1,0 +1,171 @@
+name: Deploy to Cloud Run
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: cloud-run-production
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ vars.GCP_REGION }}
+  GCP_ARTIFACT_REPOSITORY: crepfinder
+  GCP_SERVICE: crepfinder
+  GCP_MIGRATION_JOB: crepfinder-migrate
+  GCP_RUNTIME_SERVICE_ACCOUNT: ${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}
+  DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+jobs:
+  deploy:
+    name: Production deployment
+    if: >-
+      ${{
+        vars.GCP_PROJECT_ID != '' &&
+        vars.GCP_REGION != '' &&
+        vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' &&
+        vars.GCP_DEPLOYER_SERVICE_ACCOUNT != '' &&
+        vars.GCP_RUNTIME_SERVICE_ACCOUNT != '' &&
+        (
+          github.event_name == 'workflow_dispatch' ||
+          (
+            github.event.workflow_run.conclusion == 'success' &&
+            github.event.workflow_run.event == 'push' &&
+            github.event.workflow_run.head_branch == 'main'
+          )
+        )
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tested revision
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.DEPLOY_SHA }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+      - name: Install Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Build and push immutable image
+        shell: bash
+        run: |
+          set -euo pipefail
+          registry="${GCP_REGION}-docker.pkg.dev"
+          image="${registry}/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPOSITORY}/${GCP_SERVICE}:${DEPLOY_SHA}"
+          latest="${registry}/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPOSITORY}/${GCP_SERVICE}:latest"
+
+          gcloud auth configure-docker "${registry}" --quiet
+          docker build --tag "${image}" --tag "${latest}" .
+          docker push "${image}"
+          docker push "${latest}"
+          echo "IMAGE=${image}" >> "${GITHUB_ENV}"
+
+      - name: Prepare database schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          gcloud run jobs deploy "${GCP_MIGRATION_JOB}" \
+            --project="${GCP_PROJECT_ID}" \
+            --region="${GCP_REGION}" \
+            --image="${IMAGE}" \
+            --service-account="${GCP_RUNTIME_SERVICE_ACCOUNT}" \
+            --command=npm \
+            --args="--prefix,backend,run,db:prepare" \
+            --tasks=1 \
+            --parallelism=1 \
+            --max-retries=1 \
+            --task-timeout=10m \
+            --cpu=1 \
+            --memory=512Mi \
+            --set-env-vars="NODE_ENV=production,DB_SSL=true,DB_SSL_REJECT_UNAUTHORIZED=true,DB_POOL_MAX=5" \
+            --set-secrets="DATABASE_URL=crepfinder-database-url:latest,DATABASE_DIRECT_URL=crepfinder-database-direct-url:latest" \
+            --quiet
+
+          gcloud run jobs execute "${GCP_MIGRATION_JOB}" \
+            --project="${GCP_PROJECT_ID}" \
+            --region="${GCP_REGION}" \
+            --wait \
+            --quiet
+
+      - name: Deploy application
+        shell: bash
+        run: |
+          set -euo pipefail
+          service_url="$(
+            gcloud run services describe "${GCP_SERVICE}" \
+              --project="${GCP_PROJECT_ID}" \
+              --region="${GCP_REGION}" \
+              --format="value(status.url)" 2>/dev/null || true
+          )"
+          configured_url="${service_url:-https://crepfinder.invalid}"
+
+          gcloud run deploy "${GCP_SERVICE}" \
+            --project="${GCP_PROJECT_ID}" \
+            --region="${GCP_REGION}" \
+            --image="${IMAGE}" \
+            --service-account="${GCP_RUNTIME_SERVICE_ACCOUNT}" \
+            --allow-unauthenticated \
+            --ingress=all \
+            --port=8080 \
+            --cpu=1 \
+            --memory=512Mi \
+            --concurrency=40 \
+            --min=0 \
+            --max=2 \
+            --timeout=60s \
+            --execution-environment=gen2 \
+            --update-env-vars="NODE_ENV=production,SERVE_FRONTEND=true,DB_SSL=true,DB_SSL_REJECT_UNAUTHORIZED=true,DB_POOL_MAX=5,SESSION_STORE=postgres,COOKIE_SAME_SITE=lax,ENABLE_RESEARCH_ROUTES=false,ALLOW_PRODUCTION_SEED=false,FRONTEND_ORIGIN=${configured_url},BACKEND_PUBLIC_URL=${configured_url}" \
+            --update-secrets="DATABASE_URL=crepfinder-database-url:latest,SESSION_SECRET=crepfinder-session-secret:latest,SOCIAL_VERIFICATION_ADMIN_TOKEN=crepfinder-social-admin-token:latest" \
+            --quiet
+
+          service_url="$(
+            gcloud run services describe "${GCP_SERVICE}" \
+              --project="${GCP_PROJECT_ID}" \
+              --region="${GCP_REGION}" \
+              --format="value(status.url)"
+          )"
+
+          if [[ "${configured_url}" != "${service_url}" ]]; then
+            gcloud run services update "${GCP_SERVICE}" \
+              --project="${GCP_PROJECT_ID}" \
+              --region="${GCP_REGION}" \
+              --update-env-vars="FRONTEND_ORIGIN=${service_url},BACKEND_PUBLIC_URL=${service_url}" \
+              --quiet
+          fi
+
+          echo "SERVICE_URL=${service_url}" >> "${GITHUB_ENV}"
+
+      - name: Verify production readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --retry 12 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            "${SERVICE_URL}/api/ready"
+
+          {
+            echo "### Cloud Run deployment"
+            echo
+            echo "- Revision: \`${DEPLOY_SHA}\`"
+            echo "- Service: [${SERVICE_URL}](${SERVICE_URL})"
+            echo "- Readiness: [${SERVICE_URL}/api/ready](${SERVICE_URL}/api/ready)"
+          } >> "${GITHUB_STEP_SUMMARY}"

@@ -40,7 +40,7 @@ Marketplace trust is usually reduced to an average star rating. CrepFinder explo
 | Authentication | Passport, Google OAuth 2.0, LinkedIn OpenID Connect |
 | Security | Helmet, CORS allowlist, rate limiting, HTTP-only sessions |
 | Testing | Vitest, Testing Library, Supertest, jest-axe |
-| Delivery | Docker, Railway config-as-code, GitHub Actions, Dependabot |
+| Delivery | Docker, Google Cloud Run, Artifact Registry, GitHub Actions, Dependabot |
 
 ## Architecture
 
@@ -51,13 +51,19 @@ flowchart LR
   App --> Session["PostgreSQL session store"]
   App --> Data[("PostgreSQL marketplace data")]
   CI["GitHub Actions"] --> Tests["API + component tests"]
-  Tests --> Image["Production Docker image"]
-  Railway["Railway service"] --> App
+  Tests --> Image["Artifact Registry image"]
+  Image --> Migration["Cloud Run migration job"]
+  Image --> Run["Cloud Run service"]
+  Run --> App
   Neon["Neon pooled runtime URL"] --> Data
   NeonDirect["Neon direct migration URL"] --> Data
+  Migration --> NeonDirect
 ```
 
-The recommended first deployment serves the compiled React app and Express API from one Railway service. That keeps OAuth and session cookies same-origin. A split Vercel/Railway deployment is possible later, ideally behind same-site custom domains.
+The recommended deployment serves the compiled React app and Express API from
+one Cloud Run service. That keeps OAuth and session cookies same-origin. A
+separate Cloud Run job prepares the schema through Neon's direct endpoint before
+the tested image becomes the new application revision.
 
 See [docs/architecture.md](docs/architecture.md) for the product and research boundaries.
 
@@ -154,40 +160,20 @@ This runs backend tests, frontend tests, and a production frontend build. GitHub
 
 ## Production Deployment
 
-### Recommended: Railway + Neon
+### Recommended: Google Cloud Run + Neon
 
 This path produces one public origin for the UI, API, OAuth callbacks, and cookies.
 
-1. Make this directory the root of a standalone GitHub repository. Do not push the parent folder containing the duplicate `crepfinder-final*` directories or zip archives.
-2. Create a Neon PostgreSQL project.
-3. Copy both Neon connection strings:
-   - pooled URL -> `DATABASE_URL`
-   - direct URL -> `DATABASE_DIRECT_URL`
-4. In Railway, choose **New Project -> Deploy from GitHub repo** and select the CrepFinder repository.
-5. Keep the Railway service root at `/`. Railway will read `railway.json` and build the root `Dockerfile`.
-6. Under **Settings -> Networking**, generate a Railway public domain.
-7. Add these Railway variables:
-
-```text
-NODE_ENV=production
-SERVE_FRONTEND=true
-DATABASE_URL=<Neon pooled URL>
-DATABASE_DIRECT_URL=<Neon direct URL>
-DB_SSL=true
-DB_SSL_REJECT_UNAUTHORIZED=true
-DB_POOL_MAX=10
-SESSION_SECRET=<output from openssl rand -base64 48>
-SESSION_STORE=postgres
-COOKIE_SAME_SITE=lax
-FRONTEND_ORIGIN=https://${{RAILWAY_PUBLIC_DOMAIN}}
-BACKEND_PUBLIC_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}
-ENABLE_RESEARCH_ROUTES=false
-ALLOW_PRODUCTION_SEED=false
-SOCIAL_VERIFICATION_ADMIN_TOKEN=<a second independent random value>
-```
-
-8. Deploy. Railway runs `npm --prefix backend run db:prepare` before switching traffic and checks `/api/ready`.
-9. Confirm:
+1. Create a Neon project in the same region as the application. Use its pooled
+   URL at runtime and its direct URL for schema preparation.
+2. Create a Google Cloud project with billing enabled and select
+   `europe-west2` for the London deployment.
+3. Create the Artifact Registry repository, runtime identity, deployer identity,
+   Secret Manager entries, and repository-restricted Workload Identity provider.
+4. Add the five non-secret Google resource identifiers as GitHub repository
+   variables.
+5. Run **Deploy to Cloud Run** once from GitHub Actions.
+6. Confirm:
 
 ```text
 https://<your-domain>/api/health
@@ -195,6 +181,13 @@ https://<your-domain>/api/ready
 ```
 
 Both endpoints must return HTTP `200`; `/api/ready` must report `"database":"ok"`.
+
+The exact bootstrap commands, IAM grants, secret names, migration job, and
+keyless GitHub setup are documented in
+[docs/cloud-run.md](docs/cloud-run.md).
+
+The legacy [`railway.json`](railway.json) remains available for a small Railway
+deployment, but Cloud Run is the maintained production path.
 
 ### Configure Google Sign-In
 
@@ -211,12 +204,13 @@ https://<your-domain>
 https://<your-domain>/api/auth/google/callback
 ```
 
-4. Add these Railway variables and redeploy:
+4. Store the client secret in Google Secret Manager, update the Cloud Run
+   service with these variables, and deploy a new revision:
 
 ```text
 GOOGLE_CLIENT_ID=<client id>
 GOOGLE_CLIENT_SECRET=<client secret>
-GOOGLE_OAUTH_REDIRECT_URI=https://${{RAILWAY_PUBLIC_DOMAIN}}/api/auth/google/callback
+GOOGLE_OAUTH_REDIRECT_URI=https://<your-domain>/api/auth/google/callback
 ```
 
 Google requires HTTPS and production OAuth apps need an accurate homepage, privacy policy, and terms before broad public use. See [Google OAuth policies](https://developers.google.com/identity/protocols/oauth2/policies).
@@ -231,12 +225,13 @@ Google requires HTTPS and production OAuth apps need an accurate homepage, priva
 https://<your-domain>/api/auth/linkedin/callback
 ```
 
-4. Add these Railway variables and redeploy:
+4. Store the client secret in Google Secret Manager, update the Cloud Run
+   service with these variables, and deploy a new revision:
 
 ```text
 LINKEDIN_CLIENT_ID=<client id>
 LINKEDIN_CLIENT_SECRET=<client secret>
-LINKEDIN_OAUTH_REDIRECT_URI=https://${{RAILWAY_PUBLIC_DOMAIN}}/api/auth/linkedin/callback
+LINKEDIN_OAUTH_REDIRECT_URI=https://<your-domain>/api/auth/linkedin/callback
 ```
 
 See [LinkedIn's authorization-code flow](https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow).
@@ -257,11 +252,13 @@ For a brand-new disposable portfolio database only, the synthetic seed can be en
 6. Confirm an unauthenticated request receives `401`.
 7. Confirm research endpoints such as `/api/research/export.csv` return `404`.
 8. Confirm cookies are `Secure`, `HttpOnly`, and `SameSite=Lax`.
-9. Check Railway logs for startup, database, CORS, and OAuth errors.
+9. Check Cloud Logging for startup, database, CORS, and OAuth errors.
 
 ## Optional Split Frontend
 
-`frontend/vercel.json` supports a Vite SPA deployment on Vercel. Set `VITE_API_BASE_URL` to the Railway API and set the API's `FRONTEND_ORIGIN` to the Vercel URL.
+`frontend/vercel.json` supports a Vite SPA deployment on Vercel. Set
+`VITE_API_BASE_URL` to the Cloud Run API and set the API's `FRONTEND_ORIGIN` to
+the Vercel URL.
 
 This is not the default because cross-site session cookies can be blocked by browser privacy controls. For a robust split deployment, use same-site custom domains such as `app.example.com` and `api.example.com`, then test OAuth in Safari and private-browsing modes.
 
@@ -303,5 +300,5 @@ See [docs/portfolio-notes.md](docs/portfolio-notes.md) for a CV bullet, intervie
 ├── .github/              CI and dependency-update configuration
 ├── Dockerfile            Production multi-stage image
 ├── docker-compose.yml    Local PostgreSQL + API + frontend
-└── railway.json          Build, pre-deploy, health, and restart policy
+└── railway.json          Optional Railway fallback configuration
 ```

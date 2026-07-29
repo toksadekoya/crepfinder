@@ -21,7 +21,12 @@ flowchart TB
   Moderator -->|"x-admin-token"| Express
 ```
 
-The production Docker image builds the frontend in one stage and installs backend production dependencies in another. The runtime stage serves both from Express as an unprivileged `node` user. Railway runs schema preparation before deployment and waits for `/api/ready` to confirm database connectivity before switching traffic.
+The production Docker image builds the frontend in one stage and installs
+backend production dependencies in another. The runtime stage serves both from
+Express as an unprivileged `node` user. GitHub Actions publishes the tested
+image to Artifact Registry, executes schema preparation as a Cloud Run job, and
+deploys the same immutable image to Cloud Run. The workflow verifies
+`/api/ready` before reporting success.
 
 Using one origin is deliberate. CrepFinder uses server-side, HTTP-only sessions for OAuth and authenticated marketplace actions. Keeping the UI and API together avoids making third-party cookies a requirement.
 
