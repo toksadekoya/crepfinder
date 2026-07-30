@@ -6,6 +6,10 @@ The repository contains a deployment-ready portfolio MVP and the feature-flagged
 
 > **Scope:** CrepFinder currently records purchase intent and order progress. It does not yet process money, issue shipping labels, authenticate sneakers, or pay sellers.
 
+**Live demo:** [crepfinder-4mihrdqh7q-nw.a.run.app](https://crepfinder-4mihrdqh7q-nw.a.run.app/)
+
+The public demo supports marketplace browsing. OAuth sign-in remains disabled until public Google or LinkedIn client credentials are configured.
+
 ![CrepFinder seller trust interface](docs/screenshots/uploaded-paste-ready/figure-4-1-uploaded-condition-a.png)
 
 ## Why This Project
@@ -240,7 +244,12 @@ See [LinkedIn's authorization-code flow](https://learn.microsoft.com/en-us/linke
 
 The preferred route is to sign in and create genuine demo listings through `/sell`.
 
-For a brand-new disposable portfolio database only, the synthetic seed can be enabled temporarily. It truncates data, so remove `ALLOW_PRODUCTION_SEED` immediately afterwards and never use it once real accounts exist.
+For a brand-new portfolio database only, run the synthetic production seed as a
+one-time job with `ALLOW_PRODUCTION_SEED=true`. The production seed locks and
+checks every table it writes, refuses to run if any contains data, never
+truncates production data, and creates identities without usable passwords.
+Delete the one-time job afterwards; the Cloud Run service must keep
+`ALLOW_PRODUCTION_SEED=false`.
 
 ### Post-Deploy Smoke Test
 
