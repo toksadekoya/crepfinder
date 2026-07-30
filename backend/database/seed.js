@@ -1,8 +1,13 @@
 import bcrypt from 'bcrypt';
 import pool from './db.js';
+import { getSeedPolicy } from './seedPolicy.js';
 
-if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PRODUCTION_SEED !== 'true') {
-  console.error('Production seeding is disabled. Set ALLOW_PRODUCTION_SEED=true only for a new disposable demo database.');
+const seedPolicy = getSeedPolicy();
+
+if (!seedPolicy.isAllowed) {
+  console.error(
+    'Production seeding is disabled. Set ALLOW_PRODUCTION_SEED=true only on a one-time job for a new empty demo database.'
+  );
   await pool.end();
   process.exit(1);
 }
@@ -12,25 +17,72 @@ const seed = async () => {
   try {
     await client.query('BEGIN');
 
-    // Keep seeded prototype data deterministic across repeated local resets.
-    await client.query(`
-      TRUNCATE TABLE
-        trust_measurements,
-        messages,
-        reviews,
-        purchase_requests,
-        condition_assignments,
-        mutual_connections,
-        participant_codes,
-        social_verifications,
-        ab_conditions,
-        listings,
-        users
-      RESTART IDENTITY CASCADE
-    `);
+    if (seedPolicy.isProduction) {
+      // Prevent a concurrent write between the safety check and the seed inserts.
+      await client.query(`
+        LOCK TABLE
+          trust_measurements,
+          messages,
+          reviews,
+          purchase_requests,
+          condition_assignments,
+          mutual_connections,
+          participant_codes,
+          social_verifications,
+          ab_conditions,
+          listings,
+          users
+        IN ACCESS EXCLUSIVE MODE
+      `);
 
-    // Seed users
-    const passwordHash = await bcrypt.hash('password123', 10);
+      const populatedTables = await client.query(`
+        SELECT table_name, row_count
+        FROM (
+          SELECT 'trust_measurements' AS table_name, COUNT(*)::bigint AS row_count FROM trust_measurements
+          UNION ALL SELECT 'messages', COUNT(*)::bigint FROM messages
+          UNION ALL SELECT 'reviews', COUNT(*)::bigint FROM reviews
+          UNION ALL SELECT 'purchase_requests', COUNT(*)::bigint FROM purchase_requests
+          UNION ALL SELECT 'condition_assignments', COUNT(*)::bigint FROM condition_assignments
+          UNION ALL SELECT 'mutual_connections', COUNT(*)::bigint FROM mutual_connections
+          UNION ALL SELECT 'participant_codes', COUNT(*)::bigint FROM participant_codes
+          UNION ALL SELECT 'social_verifications', COUNT(*)::bigint FROM social_verifications
+          UNION ALL SELECT 'ab_conditions', COUNT(*)::bigint FROM ab_conditions
+          UNION ALL SELECT 'listings', COUNT(*)::bigint FROM listings
+          UNION ALL SELECT 'users', COUNT(*)::bigint FROM users
+        ) AS seed_table_counts
+        WHERE row_count > 0
+        ORDER BY table_name
+      `);
+
+      if (populatedTables.rows.length > 0) {
+        const tableNames = populatedTables.rows
+          .map(({ table_name: tableName }) => tableName)
+          .join(', ');
+        throw new Error(`Production seed refused because these demo tables are not empty: ${tableNames}`);
+      }
+    } else if (seedPolicy.shouldResetData) {
+      // Keep seeded prototype data deterministic across repeated local resets.
+      await client.query(`
+        TRUNCATE TABLE
+          trust_measurements,
+          messages,
+          reviews,
+          purchase_requests,
+          condition_assignments,
+          mutual_connections,
+          participant_codes,
+          social_verifications,
+          ab_conditions,
+          listings,
+          users
+        RESTART IDENTITY CASCADE
+      `);
+    }
+
+    // Production demo identities are intentionally not usable login accounts.
+    const passwordHash = seedPolicy.shouldCreatePassword
+      ? await bcrypt.hash('password123', 10)
+      : null;
     const usersResult = await client.query(
       `INSERT INTO users
         (username, email, password_hash, google_id, display_name, oauth_email_verified, auth_provider, created_at)
