@@ -1,18 +1,18 @@
 # syntax=docker/dockerfile:1
 
-FROM node:24-alpine AS frontend-build
+FROM node:25-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend ./
 RUN npm run build
 
-FROM node:24-alpine AS backend-dependencies
+FROM node:25-alpine AS backend-dependencies
 WORKDIR /app/backend
 COPY backend/package.json backend/package-lock.json ./
 RUN npm ci --omit=dev
 
-FROM node:24-alpine AS runtime
+FROM node:25-alpine AS runtime
 ENV NODE_ENV=production
 ENV SERVE_FRONTEND=true
 WORKDIR /app
